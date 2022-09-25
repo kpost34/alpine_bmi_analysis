@@ -203,9 +203,14 @@ envVarDF %>%
     #once, and 4) many BMI found
 fullBMIenvDF %>%
   filter(date>="2018-07-31" & date<="2018-08-09") %>% 
+  #count # of NAs per row
+  mutate(NA_tot=rowSums(is.na(.))) %>% 
+  #keep samples without missing data
+  filter(NA_tot==0) %>%
+  #sum by order-family
   group_by(order,family) %>% 
   mutate(count=sum(count)) %>% 
-  select(-genus) %>%
+  select(-c(genus,NA_tot)) %>%
   ungroup() %>%
   distinct() -> BMIenvDF
 
