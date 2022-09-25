@@ -19,7 +19,7 @@ envVar_inputDF<-read_csv(envVar_input_path,guess_max=5000)
 list_df<-mget(ls(pattern="DF$"))
 
 
-#### Data Checking, Cleaning, and Joining===========================================================
+#### Data Checking, Cleaning, Joining, and Subsetting===============================================
 ### Checking
 ## Dimensions, types, summaries
 map(list_df,dim)
@@ -163,14 +163,13 @@ BMInDF %>%
 #env data do not appear where there are specimen data, then there is some sort of issue
 ## Initial join
 envVarDF %>%
-  select(-location) %>%
   full_join(traitCountReDF,
-            by=c("local_site","project_site","date")) -> tmpJoinDF
+            by=c("local_site","location", "project_site","date")) -> tmpJoinDF
 
 ## Check on joined data
 # First check
 #View(tmpJoinDF)
-#missing waterfall low 
+#missing waterfall low and ALB_5IN
 #abundance data seem ok (no NAs), but there are three rows with NaNs (seems like these are placeholders to indicate nothing found)
 
 # Second check
@@ -182,49 +181,76 @@ tmpJoinDF %>%
   #data--further review is able to differentiate them (note that -105.36942 is waterfall high)
 
 
-## Correct misclassification, populate missing rows with 0s (for a haphazardly chosen order-family),
-    # and re-join using 'expanded DF'
+## Correct misclassifications in env data 
 envVarDF %>%
-  select(-location) %>%
   mutate(project_site=ifelse(lat==40.03264 & long==-105.3694,
                              "GL4_waterfall_low",
-                             project_site)) %>%
-  full_join(traitCountReDF %>%
-              mutate(count=ifelse(Order=="NaN",0,count),
-                Order=ifelse(Order=="NaN","Ephemeroptera",Order),
-                Family=ifelse(Family=="NaN","Baetidae",Family)) %>% 
-              complete(nesting(local_site,location,project_site,date),nesting(Order,Family,Genus)) %>%
-              mutate(count=replace_na(count,0)),
-            by=c("local_site","project_site","date")) %>%
-  #rename cols
-  rename_with(.cols=Order:Genus,.fn=~tolower(.x)) %>%
-  #reorder variables
-  relocate(lat:long,.after=last_col()) %>%
-  relocate(fish_presence,.after="shore") -> fullBMIenvDF
+                             project_site),
+         location=as.character(location),
+         location=ifelse(project_site=="ALB_5IN",
+                         "INLET",
+                         location),
+         location=as.factor(location)) -> envVarReDF
+
+#populate missing rows with 0s (for a haphazardly chosen order-family) and fill out all combinations of order-family
+traitCountReDF %>%
+  mutate(count=ifelse(Order=="NaN",0,count),
+    Order=ifelse(Order=="NaN","Ephemeroptera",Order),
+    Family=ifelse(Family=="NaN","Baetidae",Family)) %>% 
+    complete(nesting(local_site,location,project_site,date),nesting(Order,Family,Genus)) %>%
+    mutate(count=replace_na(count,0)) -> traitCountRe2DF
   
   
 ## Subset data (by date range) and sum by order-family
 #subset data (for use in analysis): select ~10-d period in late July-early August
   #reasons: 1) short timespan, 2) many sites sampled in this period, 3) nearly all sites sampled 
     #once, and 4) many BMI found
-fullBMIenvDF %>%
+
+# Env data
+envVarReDF %>%
   filter(date>="2018-07-31" & date<="2018-08-09") %>% 
   #count # of NAs per row
   mutate(NA_tot=rowSums(is.na(.))) %>% 
   #keep samples without missing data
-  filter(NA_tot==0) %>%
+  filter(NA_tot==0) %>% #removes GL5_4OUT
+  select(-NA_tot) %>%
+  relocate(shore,.after="lotic") -> BMIenvWideDF
+
+
+# Abundance data
+traitCountRe2DF %>%
+  rename_with(.cols=Order:Genus,.fn=~tolower(.x)) %>%
+  filter(date>="2018-07-31" & date<="2018-08-09",
+         project_site!="GL5_4OUT") %>% 
   #sum by order-family
-  group_by(order,family) %>% 
+  group_by(local_site,location,project_site,date,order,family) %>% 
   mutate(count=sum(count)) %>% 
-  select(-c(genus,NA_tot)) %>%
-  ungroup() %>%
-  distinct() -> BMIenvDF
+  ungroup() %>% 
+  select(-genus) %>% 
+  distinct() -> BMIcountTidyDF
+
+
+## Change shape of data files
+# Env data
+BMIenvWideDF %>%
+  pivot_longer(cols=c(elevation:lotic),names_to="variable",values_to="value") -> BMIenvTidyDF
+
+
+# Abundance data
+BMIcountTidyDF %>%
+  pivot_wider(id_cols=local_site:date,names_from=c("order","family"),values_from="count") -> BMIcountWideDF
+
+
+## Join wide data formats
+BMIenvWideDF %>%
+  full_join(BMIcountWideDF,by=c("local_site","location","project_site","date")) -> BMIenvcountWideDF
+
 
 
 #### Write data file================================================================================
-saveRDS(BMIenvDF,here("data","tidy_data",paste0("alpine_bmi_env_n_",Sys.Date(),".rds")))
+#saveRDS(BMIenvcountWideDF,here("data","tidy_data",paste0("alpine_bmi_env_n_",Sys.Date(),".rds")))
   
 
 ### Remove extraneous objects
-rm(list=setdiff(ls(),"BMIenvDF"))
+rm(list=setdiff(ls(),c("BMIenvWideDF","BMIenvTidyDF","BMIcountTidyDF","BMIcountWideDF","BMIenvcountWideDF")))
 
