@@ -171,7 +171,7 @@ envVarDF %>%
 # First check
 #View(tmpJoinDF)
 #missing waterfall low 
-#abundance data seem ok (no NAs)
+#abundance data seem ok (no NAs), but there are three rows with NaNs (seems like these are placeholders to indicate nothing found)
 
 # Second check
 tmpJoinDF %>%
@@ -182,13 +182,19 @@ tmpJoinDF %>%
   #data--further review is able to differentiate them (note that -105.36942 is waterfall high)
 
 
-## Correct misclassification and re-join
+## Correct misclassification, populate missing rows with 0s (for a haphazardly chosen order-family),
+    # and re-join using 'expanded DF'
 envVarDF %>%
   select(-location) %>%
   mutate(project_site=ifelse(lat==40.03264 & long==-105.3694,
                              "GL4_waterfall_low",
                              project_site)) %>%
-  full_join(traitCountReDF,
+  full_join(traitCountReDF %>%
+              mutate(count=ifelse(Order=="NaN",0,count),
+                Order=ifelse(Order=="NaN","Ephemeroptera",Order),
+                Family=ifelse(Family=="NaN","Baetidae",Family)) %>% 
+              complete(nesting(local_site,location,project_site,date),nesting(Order,Family,Genus)) %>%
+              mutate(count=replace_na(count,0)),
             by=c("local_site","project_site","date")) %>%
   #rename cols
   rename_with(.cols=Order:Genus,.fn=~tolower(.x)) %>%
@@ -197,7 +203,7 @@ envVarDF %>%
   relocate(fish_presence,.after="shore") -> fullBMIenvDF
   
   
-## Subset data (by date range) and group by order-family
+## Subset data (by date range) and sum by order-family
 #subset data (for use in analysis): select ~10-d period in late July-early August
   #reasons: 1) short timespan, 2) many sites sampled in this period, 3) nearly all sites sampled 
     #once, and 4) many BMI found
@@ -213,6 +219,7 @@ fullBMIenvDF %>%
   select(-c(genus,NA_tot)) %>%
   ungroup() %>%
   distinct() -> BMIenvDF
+
 
 #### Write data file================================================================================
 saveRDS(BMIenvDF,here("data","tidy_data",paste0("alpine_bmi_env_n_",Sys.Date(),".rds")))
