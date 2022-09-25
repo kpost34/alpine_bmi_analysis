@@ -205,11 +205,12 @@ fullBMIenvDF %>%
   filter(date>="2018-07-31" & date<="2018-08-09") %>% 
   group_by(order,family) %>% 
   mutate(count=sum(count)) %>% 
+  select(-genus) %>%
   ungroup() %>%
   distinct() -> BMIenvDF
 
 #### Write data file================================================================================
-saveRDS(BMIenvDF,here("data","tidy_data",paste0("alpine_bmi_",Sys.Date(),".rds")))
+saveRDS(BMIenvDF,here("data","tidy_data",paste0("alpine_bmi_env_n_",Sys.Date(),".rds")))
   
 
 ### Remove extraneous objects
