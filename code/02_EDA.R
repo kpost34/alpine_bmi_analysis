@@ -85,38 +85,15 @@ barplotter_avg2(BMIcountTidyDF,order,local_site,count,pos="dodge",angled=TRUE)
 #### Environmental data-----------------------------------------------------------------------------
 ### Faceted barplot of quantitative variables
 ## By location
-BMIenvTidyDF %>%
-  group_by(location,variable) %>%
-  summarize(mean_value = mean(value)) %>% 
-  ungroup() %>%
-  mutate(location = fct_reorder(location,mean_value,.fun=sum,.desc=TRUE)) %>%
-  ggplot(aes(x=location,y=mean_value,fill=variable)) +
-  geom_col(color="black") +
-  scale_fill_viridis_d() +
-  #geom_errorbar(aes(ymin=lower,ymax=upper),width=0.4) +
-  #scale_y_continuous(expand=expansion(mult=c(0,0.1))) +
-  theme_bw() +
-  theme(axis.text.x=element_text(angle=45,vjust=0.5,hjust=0.5)) +
-  facet_wrap(~variable,scales="free")
+bar_faceter(BMIenvTidyDF,location,variable,value,angled=TRUE) 
 
 ## By local_site
-BMIenvTidyDF %>%
-  group_by(local_site,variable) %>%
-  summarize(mean_value = mean(value)) %>% 
-  ungroup() %>%
-  mutate(location = fct_reorder(local_site,mean_value,.fun=sum,.desc=TRUE)) %>%
-  ggplot(aes(x=location,y=mean_value,fill=variable)) +
-  geom_col(color="black") +
-  scale_fill_viridis_d() +
-  #geom_errorbar(aes(ymin=lower,ymax=upper),width=0.4) +
-  #scale_y_continuous(expand=expansion(mult=c(0,0.1))) +
-  theme_bw() +
-  theme(axis.text.x=element_text(angle=45,vjust=0.5,hjust=0.5)) +
-  facet_wrap(~variable,scales="free")
+bar_faceter(BMIenvTidyDF,local_site,variable,value,angled=TRUE) 
 
 
 ### Shore
 ## By location
+# Total count
 BMIenvTidyDF %>%
   group_by(location,shore) %>%
   summarize(total_count = n()) %>% 
@@ -124,13 +101,25 @@ BMIenvTidyDF %>%
   ggplot(aes(x=location,y=total_count,fill=shore)) +
   geom_col(color="black") +
   scale_fill_viridis_d() +
-  #geom_errorbar(aes(ymin=lower,ymax=upper),width=0.4) +
-  #scale_y_continuous(expand=expansion(mult=c(0,0.1))) +
+  theme_bw() +
+  theme(axis.text.x=element_text(angle=45,vjust=0.5,hjust=0.5))
+
+# Proportion
+BMIenvWideDF %>%
+  group_by(location,shore) %>%
+  summarize(num = n())
+            prop = n()) #%>% 
+  mutate(location = fct_reorder(location,total_count,.fun=sum,.desc=TRUE)) %>%
+  ggplot(aes(x=location,y=total_count,fill=shore)) +
+  geom_col(color="black") +
+  scale_fill_viridis_d() +
   theme_bw() +
   theme(axis.text.x=element_text(angle=45,vjust=0.5,hjust=0.5))
 
 
 ## By local_site
+bar_faceter(BMIenvWideDF,location,variable,value,angled=TRUE) 
+
 BMIenvTidyDF %>%
   group_by(local_site,shore) %>%
   summarize(mean_value = mean(value)) %>% 
@@ -142,7 +131,8 @@ BMIenvTidyDF %>%
   #geom_errorbar(aes(ymin=lower,ymax=upper),width=0.4) +
   #scale_y_continuous(expand=expansion(mult=c(0,0.1))) +
   theme_bw() +
-  theme(axis.text.x=element_text(angle=45,vjust=0.5,hjust=0.5)) +
+  theme(axis.text.x=element_text(angle=45,vjust=0.5,hjust=0.5),
+        legend.) +
   facet_wrap(~shore,scales="free")
 
 
@@ -152,10 +142,10 @@ BMIenvTidyDF %>%
 
 
 ## Need to commit
-  # functionalized ggplots
+  #more updates to plots
+#created faceted barplot function
 
 ## Need to do
-  #make function (or update current functions) for faceted plots
   #pairwise plots for all quantitative (continuous) env vars
   #look at assumptions of PCA and see if transforms needed--distribution (symmetrical), multicollinearity
 
