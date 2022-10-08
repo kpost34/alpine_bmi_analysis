@@ -2,7 +2,7 @@
 #EDA
 
 #### Load Packages and Source DFs====================================================================
-pacman::p_load(here,tidyverse,scales,GGally)
+pacman::p_load(here,scales,GGally)
 source(here("code","01_DataSetup.R"))
 source(here("code","02a_EDA.R"))
 
@@ -90,60 +90,137 @@ bar_faceter(BMIenvTidyDF,location,variable,value,angled=TRUE)
 ## By local_site
 bar_faceter(BMIenvTidyDF,local_site,variable,value,angled=TRUE) 
 
+## By shore
+bar_faceter(BMIenvTidyDF,shore,variable,value,angled=TRUE) 
+
 
 ### Shore
 ## By location
 # Total count
-BMIenvTidyDF %>%
-  group_by(location,shore) %>%
-  summarize(total_count = n()) %>% 
-  mutate(location = fct_reorder(location,total_count,.fun=sum,.desc=TRUE)) %>%
-  ggplot(aes(x=location,y=total_count,fill=shore)) +
-  geom_col(color="black") +
+BMIenvWideDF %>%
+  ggplot() +
+  geom_bar(aes(x=location,fill=shore),color="black") +
   scale_fill_viridis_d() +
   theme_bw() +
   theme(axis.text.x=element_text(angle=45,vjust=0.5,hjust=0.5))
 
 # Proportion
 BMIenvWideDF %>%
-  group_by(location,shore) %>%
-  summarize(num = n())
-            prop = n()) #%>% 
-  mutate(location = fct_reorder(location,total_count,.fun=sum,.desc=TRUE)) %>%
-  ggplot(aes(x=location,y=total_count,fill=shore)) +
-  geom_col(color="black") +
+  ggplot() +
+  geom_bar(aes(x=location,y=..count../sum(..count..),fill=shore),color="black") +
   scale_fill_viridis_d() +
+  labs(y="proportion") +
   theme_bw() +
   theme(axis.text.x=element_text(angle=45,vjust=0.5,hjust=0.5))
 
 
-## By local_site
-bar_faceter(BMIenvWideDF,location,variable,value,angled=TRUE) 
 
-BMIenvTidyDF %>%
-  group_by(local_site,shore) %>%
-  summarize(mean_value = mean(value)) %>% 
-  ungroup() %>%
-  mutate(location = fct_reorder(local_site,mean_value,.fun=sum,.desc=TRUE)) %>%
-  ggplot(aes(x=local_site,y=mean_value,fill=shore)) +
-  geom_col(color="black") +
-  scale_fill_viridis_d() +
-  #geom_errorbar(aes(ymin=lower,ymax=upper),width=0.4) +
-  #scale_y_continuous(expand=expansion(mult=c(0,0.1))) +
-  theme_bw() +
-  theme(axis.text.x=element_text(angle=45,vjust=0.5,hjust=0.5),
-        legend.) +
-  facet_wrap(~shore,scales="free")
+### Scatterplots
+## No groups
+# Subset (without smoother)
+BMIenvWideDF %>% 
+  select(elevation:sat) %>%
+  ggpairs() +
+  theme_bw() 
+
+# Subset (with smoother)
+BMIenvWideDF %>% 
+  select(elevation:sat) %>%
+  ggpairs(lower=list(continuous=wrap(smoother))) +
+  theme_bw() 
 
 
-###  
+# Full dataset (without smoother)
+BMIenvWideDF %>% 
+  select(elevation:nitrate) %>%
+  ggpairs() +
+  theme_bw()
+
+# Full dataset (with smoother)
+BMIenvWideDF %>% 
+  select(elevation:nitrate) %>%
+  ggpairs(lower=list(continuous=wrap(smoother))) +
+  theme_bw()
 
 
+## By lotic/lentic
+# Subset (without smoother)
+BMIenvWideDF %>% 
+  select(elevation:sat,lotic) %>%
+  ggpairs(columns=1:3,aes(color=as.factor(lotic))) +
+  theme_bw()
+
+# Subset (with smoother)
+BMIenvWideDF %>% 
+  select(elevation:sat,lotic) %>%
+  ggpairs(columns=1:3,aes(color=as.factor(lotic)),lower=list(continuous=wrap(smoother))) +
+  theme_bw()
 
 
-## Need to commit
-  #more updates to plots
-#created faceted barplot function
+# Full dataset (without smoother)
+BMIenvWideDF %>% 
+  select(elevation:nitrate,lotic) %>%
+  ggpairs(columns=1:3,aes(color=as.factor(lotic))) +
+  theme_bw()
+
+# Full dataset (with smoother)
+BMIenvWideDF %>% 
+  select(elevation:nitrate,lotic) %>%
+  ggpairs(columns=1:3,aes(color=as.factor(lotic)),lower=list(continuous=wrap(smoother))) +
+  theme_bw()
+
+
+## By fish presence 
+# Subset (without smoother)
+BMIenvWideDF %>% 
+  select(elevation:sat,fish_presence) %>%
+  ggpairs(columns=1:3,aes(color=as.factor(fish_presence))) +
+  theme_bw()
+
+
+# Subset (with smoother)
+BMIenvWideDF %>% 
+  select(elevation:sat,fish_presence) %>%
+  ggpairs(columns=1:3,aes(color=as.factor(fish_presence)),lower=list(continuous=wrap(smoother))) +
+  theme_bw()
+
+# Full dataset (without smoother)
+BMIenvWideDF %>% 
+  select(elevation:nitrate,fish_presence) %>%
+  ggpairs(columns=1:3,aes(color=as.factor(fish_presence))) +
+  theme_bw()
+
+# Full dataset (with smoother)
+BMIenvWideDF %>% 
+  select(elevation:nitrate,fish_presence) %>%
+  ggpairs(columns=1:3,aes(color=as.factor(fish_presence)),lower=list(continuous=wrap(smoother))) +
+  theme_bw()
+
+
+### Heat maps (full dataset)
+BMIenvWideDF %>% 
+  select(elevation:nitrate) %>%
+  ggcorr() +
+  # ggcorr(low = "#F21A00",
+  #        mid = "#EEEEEE",
+  #        high = "#3B9AB2") +
+  #scale_fill_distiller(palette ="RdBu", direction = 1) +
+  theme_bw()
+
+  
+
+ ## DONE
+#constructed heat map all continuous variables and scatterplots of all continuous variables, either
+  #as is or using groups
+#testing assumptions of PCA
+#renamed EDA function script
+#created new script for PCA functions
+
+
+## LAST COMMIT
+#added faceted plots to EDA
+
+
 
 ## Need to do
   #pairwise plots for all quantitative (continuous) env vars
