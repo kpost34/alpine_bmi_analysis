@@ -4,7 +4,7 @@
 #### Load Packages and Source DFs====================================================================
 pacman::p_load(here,scales,GGally)
 source(here("code","01_DataSetup.R"))
-source(here("code","02a_EDA.R"))
+source(here("code","02a_EDA_functions.R"))
 
 
 #### Data Import====================================================================================
@@ -160,13 +160,13 @@ BMIenvWideDF %>%
 # Full dataset (without smoother)
 BMIenvWideDF %>% 
   select(elevation:nitrate,lotic) %>%
-  ggpairs(columns=1:3,aes(color=as.factor(lotic))) +
+  ggpairs(columns=1:6,aes(color=as.factor(lotic))) +
   theme_bw()
 
 # Full dataset (with smoother)
 BMIenvWideDF %>% 
   select(elevation:nitrate,lotic) %>%
-  ggpairs(columns=1:3,aes(color=as.factor(lotic)),lower=list(continuous=wrap(smoother))) +
+  ggpairs(columns=1:6,aes(color=as.factor(lotic)),lower=list(continuous=wrap(smoother))) +
   theme_bw()
 
 
@@ -187,13 +187,13 @@ BMIenvWideDF %>%
 # Full dataset (without smoother)
 BMIenvWideDF %>% 
   select(elevation:nitrate,fish_presence) %>%
-  ggpairs(columns=1:3,aes(color=as.factor(fish_presence))) +
+  ggpairs(columns=1:6,aes(color=as.factor(fish_presence))) +
   theme_bw()
 
 # Full dataset (with smoother)
 BMIenvWideDF %>% 
   select(elevation:nitrate,fish_presence) %>%
-  ggpairs(columns=1:3,aes(color=as.factor(fish_presence)),lower=list(continuous=wrap(smoother))) +
+  ggpairs(columns=1:6,aes(color=as.factor(fish_presence)),lower=list(continuous=wrap(smoother))) +
   theme_bw()
 
 
@@ -207,23 +207,7 @@ BMIenvWideDF %>%
   #scale_fill_distiller(palette ="RdBu", direction = 1) +
   theme_bw()
 
-  
-
- ## DONE
-#constructed heat map all continuous variables and scatterplots of all continuous variables, either
-  #as is or using groups
-#testing assumptions of PCA
-#renamed EDA function script
-#created new script for PCA functions
 
 
-## LAST COMMIT
-#added faceted plots to EDA
-
-
-
-## Need to do
-  #pairwise plots for all quantitative (continuous) env vars
-  #look at assumptions of PCA and see if transforms needed--distribution (symmetrical), multicollinearity
 
                 

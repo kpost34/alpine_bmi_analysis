@@ -1,2 +1,47 @@
 #Created by Keith Post on 10/8/22
 #PCA functions
+
+
+
+
+#### Assumption 1: Symmetrical Distribution/Normality===============================================
+### Transformations
+## Boxcox transformation
+boxcoxer<-function(x){
+  out<-boxcox(x~1,plotit=FALSE)
+  lambda<-out$x[out$y==max(out$y)]
+  x^lambda
+}
+
+
+## Inverse transformation
+inverse<-function(x){
+  1/x
+}
+
+
+### Visualizations
+## Histogram plotter
+histogrammer<-function(dat,var,meas,nbin=8,cols=NULL){
+  dat %>%
+    ggplot() +
+      geom_histogram(aes({{meas}},fill={{var}}),color="black",bins=nbin) +
+      facet_wrap(vars({{var}}),scales="free",ncol=cols) +
+      scale_fill_viridis_d(guide="none") +
+      theme_bw()
+}
+
+## Q-Q Plots
+qqplotter<-function(dat,var,meas,cols=NULL){
+  dat %>% 
+    ggplot() +
+    geom_qq(aes(sample={{meas}}),color="darkblue") +
+    geom_qq_line(aes(sample={{meas}})) +
+    facet_wrap(vars({{var}}),scales="free",ncol=cols) +
+    labs(x="Theoretical Quantiles",
+         y="Sample Quantiles") +
+    theme_bw()
+}
+
+
+
