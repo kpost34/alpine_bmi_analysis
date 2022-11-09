@@ -4,11 +4,16 @@
 
 #### Source DFs (and load packages)=================================================================
 pacman::p_load(here,rstatix,MASS,GGally,vegan,ggfortify,ggbiplot)
-source(here("code","01_DataSetup.R"))
-source(here("code","02a_EDA_functions.R"))
-source(here("code","03a_PCA_functions.R"))
 
 select<-dplyr::select
+
+
+source(here::here("code","01_DataSetup.R"))
+source(here::here("code","02a_EDA_functions.R"))
+source(here::here("code","03a_PCA_functions.R"))
+
+
+
 
 
 ##### Test Assumptions of PCA=======================================================================
@@ -129,8 +134,8 @@ BMIenvWideDF %>%
 
 
 ##### PCA===========================================================================================
-### Run PCA
-## prcomp
+#### Run PCA
+### prcomp
 BMIenvWideDF_trans %>%
   #select sites + env vars
   select(project_site,sat,elevation_trans:last_col()) %>%
@@ -139,7 +144,7 @@ BMIenvWideDF_trans %>%
          data=.,scale.=TRUE,center=TRUE) -> envPCA1
 
 
-## princomp
+### princomp
 BMIenvWideDF_trans %>%
   #select sites + env vars
   select(project_site,sat,elevation_trans:last_col()) %>%
@@ -150,38 +155,38 @@ BMIenvWideDF_trans %>%
 
 
 
- ### Display output (statistics)
-## sds
+#### Display output (statistics)
+### sds
 envPCA1
 envPCA2
 
-## sds, prop of var, and cumulative proportion
+### sds, prop of var, and cumulative proportion
 summary(envPCA1)
 summary(envPCA2)
 #PC1 = ~ 49% of variance; PC2 = ~ 25% of variance
 
-## isolate sds
+### isolate sds
 envPCA1$sdev
 envPCA2$sdev
 
 
-## EVs
+### EVs
 envPCA1$sdev^2
 envPCA2$sdev^2
 
-## loadings
+### loadings
 envPCA1$rotation
 envPCA2$loadings
 #PC1: negative: sat & elevation; positive: temp & DO
 #PC2: negative: nitrate, pH, & temp
 
-## scores
+### scores
 envPCA1$x
 envPCA2$scores
 
 
-### Choosing PCs
-## Scree plot
+#### Choosing PCs
+### Scree plot
 screeplot(envPCA1,bstick=TRUE,type="barplot",
           main="PCA of alpine lakes environmental variables")
 abline(h=mean(envPCA1$sdev^2))
@@ -190,11 +195,11 @@ abline(h=mean(envPCA1$sdev^2))
 #3) PC1-PC3 above broken stick distribution
 
 
-### Visualize biplot
-## Base R
+#### Visualize biplot
+### Base R
 biplot(envPCA1)
 
-#ggbiplot
+## ggbiplot
 ggbiplot(envPCA1) +
   theme_bw()
 
@@ -207,10 +212,8 @@ autoplot(envPCA1,loadings=TRUE,loadings.label=TRUE,shape=FALSE,
 
 
 
-
-
-### Run PCA (after removing nitrate)
-## prcomp
+#### Run PCA (after removing nitrate)
+### prcomp
 BMIenvWideDF_trans %>%
   #select sites + env vars
   select(project_site,sat,elevation_trans:ph_trans) %>%
@@ -218,35 +221,139 @@ BMIenvWideDF_trans %>%
   prcomp(~sat + elevation_trans + temp_trans + DO_trans + ph_trans,
          data=.,scale.=TRUE,center=TRUE) -> envPCA3
 
-summary(envPCA3)
 
+#### Statistics
+### sds
+envPCA1[1]
+envPCA3[1]
+
+
+### sds, prop of var, and cumulative proportion
+summary(envPCA1)
+summary(envPCA3)
+#PC1 = ~ 59% of variance; PC2 = ~ 22% of variance
+
+### EVs
+envPCA1$sdev^2
+envPCA3$sdev^2
+
+### loadings
+envPCA1$rotation
+envPCA3$rotation
+#PC1: negative: sat & elevation; positive: temp & DO
+#PC2: positive: pH
+
+### scores
+envPCA1$x
+envPCA3$x
+
+
+#### Choosing PCs
 screeplot(envPCA3,bstick=TRUE,type="barplot",
           main="PCA of alpine lakes environmental variables")
 abline(h=mean(envPCA3$sdev^2))
+#1) EVs drop the most from PC1 to PC2
+#2) PC1-PC2 above mean EV
+#3) PC1 only above broken stick distribution
+ 
 
-envPCA1$rotation
-envPCA3$rotation
-
+#### Visualizations
+### Biplot (base)
 biplot(envPCA1)
 biplot(envPCA3)
 
+### ggbiplot
+## distance-preserving
+ggbiplot(envPCA3,scale=0,labels=1:22) +
+  expand_limits(x=c(NA,2),
+                y=c(NA,2)) +
+  theme_bw() 
 
-#----------------------------------------------------------------------------------------------
+## distance-preserving with groups
+# map 
+bmi_cat_vars<-c("local_site","location", "shore","lotic","fish_presence")
+
+bmi_cat_vars %>%
+  map(function(g){
+      ggbiplot(envPCA3,scale=0) +
+      expand_limits(x=c(NA,2),
+                    y=c(NA,2.5)) +
+      geom_point(aes(color=BMIenvWideDF_trans[[g]])) +
+      scale_color_viridis_d() +
+      theme_bw() 
+  }) -> bmi_ggbiplot_list
+
+
+
+# local_site
+#option1 (points colored by cat var)
+ggbiplot(envPCA3,scale=0) +
+  expand_limits(x=c(NA,2),
+                y=c(NA,2.5)) +
+  geom_point(aes(color=BMIenvWideDF_trans$local_site)) +
+  scale_color_viridis_d() +
+  theme_bw() 
+
+#option2 (text colored by cat var)
+ggbiplot(envPCA3,scale=0,labels=1:22,groups=BMIenvWideDF_trans$local_site) +
+  expand_limits(x=c(NA,2),
+                y=c(NA,2.5)) +
+  scale_color_viridis_d() +
+  theme_bw() 
+
+# shore
+ggbiplot(envPCA3,scale=0,labels=1:22,groups=BMIenvWideDF_trans$shore) +
+  expand_limits(x=c(NA,2),
+                y=c(NA,2.5)) +
+  scale_color_viridis_d(end=0.9) +
+  theme_bw() 
+
+# lotic
+ggbiplot(envPCA3,scale=0,labels=1:22,groups=BMIenvWideDF_trans$lotic) +
+  expand_limits(x=c(NA,2),
+                y=c(NA,2.5)) +
+  scale_color_viridis_d(end=0.8) +
+  theme_bw() 
+
+# fish presence
+ggbiplot(envPCA3,scale=0,groups=as.factor(BMIenvWideDF_trans$fish_presence)) +
+  expand_limits(x=c(NA,2),
+                y=c(NA,2)) +
+  theme_bw()
+
+
+
+## ggplot with ggfortify
+autoplot(envPCA3,loadings=TRUE,loadings.label=TRUE,shape=FALSE,
+         loadings.label.repel=TRUE) +
+  geom_point(aes(color=BMIenvWideDF_trans$shore)) +
+  #expand_limits(x=c(-0.5,0.5)) +
+  theme_bw()
+
+
+
+
+
+
+
+
+
+ #----------------------------------------------------------------------------------------------
 
 ## DONE
-#began PCA of env vars
-#computed stats and made biplots of PCAs using prcomp and princomp and prcomp with and without
-  #nitrate
-
-
+#re-ran PCA after dropping nitrate, including stats and plots
+#improved ggbiplot aesthetics
 
 ## LAST COMMIT
-#created boxcox and inverse transformation functions
-#completed testing of assumption 1
-#created and implemented new functions histogrammer nad qqplotter
-#tested assumption 2
+#began PCA of env vars
+#computed stats and made biplots of PCAs using prcomp and princomp and prcomp with and without
+#nitrate
 
 ## TO DO
+#change fish_presence and lotic to factors in data setup code, and then re-try map()
+#streamline upstream (particularly plotting) code in this script
+
 #consider doing some plots of diversity (family richness, index)
+
 
 
