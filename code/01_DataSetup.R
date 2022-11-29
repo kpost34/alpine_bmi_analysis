@@ -42,16 +42,16 @@ n_miss(BMItrait_inputDF %>% select(-notes)) #only notes field contains missing v
 ### Cleaning
 ## Abundance data
 BMIn_inputDF %>%
-  #reclassify location as factor
-  mutate(location=as.factor(location)) %>%
+  #reclassify multiple cols as factors
+  mutate(across(c(local_site,location,Order:Genus),as.factor)) %>%
   #remove LTER_site 
   select(-LTER_site) -> BMInDF
 
 ## Env data
 envVar_inputDF %>%
-  #reclassify cols
-  mutate(across(c(location,shore),~as.factor(.x)),
-    across(elevation:nitrate,~as.numeric(.x))) %>%
+  #reclassify cols as factors
+  mutate(across(c(location,location,fish_presence:lotic),as.factor),
+    across(elevation:nitrate,as.numeric)) %>%
   #count # of NAs per row
   #mutate(NA_tot=rowSums(is.na(.))) %>% 
   #keep samples without missing data
@@ -235,6 +235,8 @@ traitCountRe2DF %>%
 ## Change shape of data files
 # Env data
 BMIenvWideDF %>%
+  #make fish_presence and lotic numeric to enable pivot
+  mutate(across(fish_presence:lotic,as.numeric)) %>%
   pivot_longer(cols=c(elevation:lotic),names_to="variable",values_to="value") -> BMIenvTidyDF
 
 
@@ -250,7 +252,7 @@ BMIenvWideDF %>%
 
 
 #### Write data file================================================================================
-#saveRDS(BMIenvcountWideDF,here("data","tidy_data",paste0("alpine_bmi_env_n_",Sys.Date(),".rds")))
+#saveRDS(BMIenvcountWideDF,here::here("data","tidy_data",paste0("alpine_bmi_env_n_",Sys.Date(),".rds")))
   
 
 ### Remove extraneous objects

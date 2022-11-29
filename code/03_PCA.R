@@ -41,7 +41,7 @@ BMIenvWideDF %>%
 
 
 ### Transformations (using BoxCox)
-## Transform data (5/6 quantitative vari)
+## Transform data (5/6 quantitative var)
 # Wide format
 BMIenvWideDF %>%
   mutate(across(c(elevation,temp,DO:nitrate),~boxcoxer(.x),.names="{.col}_trans")) %>%
@@ -49,6 +49,8 @@ BMIenvWideDF %>%
 
 # Tidy format
 BMIenvWideDF_trans %>% 
+  #make lotic and fish presence numeric for pivot
+  mutate(across(fish_presence:lotic,as.numeric)) %>%
   pivot_longer(cols=!c(local_site:date,shore), names_to="variable",values_to="value") -> BMIenvTidyDF_trans
 
 
@@ -87,6 +89,8 @@ BMIenvWideDF %>%
 
 # Tidy format
 BMIenvWideDF_trans2 %>% 
+  #make fish_presence and lotic numeric for pivot
+  mutate(across(fish_presence:lotic,as.numeric)) %>%
   pivot_longer(cols=!c(local_site:date,shore), names_to="variable",values_to="value") -> BMIenvTidyDF_trans2
 
 
@@ -127,7 +131,7 @@ BMIenvWideDF %>%
   theme_bw()
 #aside from a few pairs (e.g., sat-nitrate, elevation-nitrate, and DO-nitrate), there tends to be
   #linear relationships among pairs of variables
-#nitrates apparent non-linear relationships with other variables and its clear bimodal distribution
+#nitrate's apparent non-linear relationships with other variables and its clear bimodal distribution
   #will be kept in mind and could lead to a re-analysis of the data
 
 
@@ -141,7 +145,7 @@ BMIenvWideDF_trans %>%
   select(project_site,sat,elevation_trans:last_col()) %>%
   #formula input using scaled and centered variables
   prcomp(~sat + elevation_trans + temp_trans + DO_trans + ph_trans + nitrate_trans,
-         data=.,scale.=TRUE,center=TRUE) -> envPCA1
+         data=.,scale.=TRUE,center=TRUE) -> envPCA1_pr
 
 
 ### princomp
@@ -150,57 +154,58 @@ BMIenvWideDF_trans %>%
   select(project_site,sat,elevation_trans:last_col()) %>%
   #formula input using correlation matrix
   princomp(~sat + elevation_trans + temp_trans + DO_trans + ph_trans + nitrate_trans,
-           data=.,cor=TRUE,scores=TRUE,fix_sign=TRUE) -> envPCA2
+           data=.,cor=TRUE,scores=TRUE,fix_sign=TRUE) -> envPCA1_prin
 
 
 
 
 #### Display output (statistics)
 ### sds
-envPCA1
-envPCA2
+envPCA1_pr
+envPCA1_prin
 
 ### sds, prop of var, and cumulative proportion
-summary(envPCA1)
-summary(envPCA2)
+summary(envPCA1_pr)
+summary(envPCA1_prin)
 #PC1 = ~ 49% of variance; PC2 = ~ 25% of variance
 
 ### isolate sds
-envPCA1$sdev
-envPCA2$sdev
+envPCA1_pr$sdev
+envPCA1_prin$sdev
 
 
 ### EVs
-envPCA1$sdev^2
-envPCA2$sdev^2
+envPCA1_pr$sdev^2
+envPCA1_prin$sdev^2
 
 ### loadings
-envPCA1$rotation
-envPCA2$loadings
+envPCA1_pr$rotation
+envPCA1_prin$loadings
 #PC1: negative: sat & elevation; positive: temp & DO
 #PC2: negative: nitrate, pH, & temp
 
 ### scores
-envPCA1$x
-envPCA2$scores
+envPCA1_pr$x
+envPCA1_prin$scores
 
 
 #### Choosing PCs
 ### Scree plot
-screeplot(envPCA1,bstick=TRUE,type="barplot",
+screeplot(envPCA1_pr,bstick=TRUE,type="barplot",
           main="PCA of alpine lakes environmental variables")
-abline(h=mean(envPCA1$sdev^2))
+abline(h=mean(envPCA1_pr$sdev^2))
 #1) EVs drop the most from PC1 to PC2
 #2) PC1-PC3 above mean EV
 #3) PC1-PC3 above broken stick distribution
 
 
+
 #### Visualize biplot
 ### Base R
-biplot(envPCA1)
+biplot(envPCA1_pr)
 
 ## ggbiplot
-ggbiplot(envPCA1) +
+ggbiplot(envPCA1_pr) +
   theme_bw()
 
 ## ggplot with ggfortify
@@ -219,39 +224,41 @@ BMIenvWideDF_trans %>%
   select(project_site,sat,elevation_trans:ph_trans) %>%
   #formula input using scaled and centered variables
   prcomp(~sat + elevation_trans + temp_trans + DO_trans + ph_trans,
-         data=.,scale.=TRUE,center=TRUE) -> envPCA3
+         data=.,scale.=TRUE,center=TRUE) -> envPCA2_pr
 
 
 #### Statistics
 ### sds
-envPCA1[1]
-envPCA3[1]
+envPCA1_pr[1]
+envPCA2_pr[1]
+#SDs have decreased, particularly starting from PC2
 
 
 ### sds, prop of var, and cumulative proportion
-summary(envPCA1)
-summary(envPCA3)
+summary(envPCA1_pr)
+summary(envPCA2_pr)
 #PC1 = ~ 59% of variance; PC2 = ~ 22% of variance
+#now first two PCs explain ~81% of variance (compared to ~74%)
 
 ### EVs
-envPCA1$sdev^2
-envPCA3$sdev^2
+envPCA1_pr$sdev^2
+envPCA2_pr$sdev^2
 
 ### loadings
-envPCA1$rotation
-envPCA3$rotation
+envPCA1_pr$rotation
+envPCA2_pr$rotation
 #PC1: negative: sat & elevation; positive: temp & DO
 #PC2: positive: pH
 
 ### scores
-envPCA1$x
-envPCA3$x
+envPCA1_pr$x
+envPCA2_pr$x
 
 
 #### Choosing PCs
-screeplot(envPCA3,bstick=TRUE,type="barplot",
+screeplot(envPCA2_pr,bstick=TRUE,type="barplot",
           main="PCA of alpine lakes environmental variables")
-abline(h=mean(envPCA3$sdev^2))
+abline(h=mean(envPCA2_pr$sdev^2))
 #1) EVs drop the most from PC1 to PC2
 #2) PC1-PC2 above mean EV
 #3) PC1 only above broken stick distribution
@@ -259,75 +266,79 @@ abline(h=mean(envPCA3$sdev^2))
 
 #### Visualizations
 ### Biplot (base)
-biplot(envPCA1)
-biplot(envPCA3)
+biplot(envPCA1_pr)
+biplot(envPCA2_pr)
 
 ### ggbiplot
-## distance-preserving
-ggbiplot(envPCA3,scale=0,labels=1:22) +
+## Distance-preserving
+ggbiplot(envPCA2_pr,scale=0,labels=1:22) +
   expand_limits(x=c(NA,2),
                 y=c(NA,2)) +
   theme_bw() 
 
-## distance-preserving with groups
-# map 
-bmi_cat_vars<-c("local_site","location", "shore","lotic","fish_presence")
 
+
+## With groups
+#example with lotic as group and with ellipses drawn
+ggbiplot(envPCA2_pr,scale=0,labels=1:22,groups=BMIenvWideDF_trans$lotic,ellipse=TRUE) +
+  expand_limits(x=c(NA,2),
+                y=c(NA,2)) +
+  theme_bw() 
+
+
+# map 
+bmi_cat_vars<-c("local_site","location", "fish_presence","lotic","shore")
+
+#without ellipse
 bmi_cat_vars %>%
+  set_names() %>%
   map(function(g){
-      ggbiplot(envPCA3,scale=0) +
+    ggbiplot(envPCA2_pr,scale=0) +
+      ggtitle(paste("Environmental variables grouped by",g)) +
       expand_limits(x=c(NA,2),
                     y=c(NA,2.5)) +
       geom_point(aes(color=BMIenvWideDF_trans[[g]])) +
-      scale_color_viridis_d() +
+      labs(color=g) +
+      scale_color_viridis_d(end=0.8) +
       theme_bw() 
   }) -> bmi_ggbiplot_list
+#poor discrimination: location and shore
+#better discrimination: local_site, fish_presence, and lotic
+
+#with ellipses
+bmi_cat_vars %>%
+  set_names() %>%
+  map(function(g){
+    ggbiplot(envPCA2_pr,scale=0,groups=BMIenvWideDF_trans[[g]],ellipse=TRUE) +
+      ggtitle(paste("Environmental variables grouped by",g)) +
+      expand_limits(x=c(NA,2),
+                    y=c(NA,2.5)) +
+      geom_point(aes(color=BMIenvWideDF_trans[[g]])) +
+      labs(color=g) +
+      scale_color_viridis_d(end=0.8) +
+      theme_bw() 
+  }) -> bmi_ggbiplot_list_ell
 
 
-
-# local_site
-#option1 (points colored by cat var)
-ggbiplot(envPCA3,scale=0) +
-  expand_limits(x=c(NA,2),
-                y=c(NA,2.5)) +
-  geom_point(aes(color=BMIenvWideDF_trans$local_site)) +
-  scale_color_viridis_d() +
-  theme_bw() 
-
-#option2 (text colored by cat var)
-ggbiplot(envPCA3,scale=0,labels=1:22,groups=BMIenvWideDF_trans$local_site) +
-  expand_limits(x=c(NA,2),
-                y=c(NA,2.5)) +
-  scale_color_viridis_d() +
-  theme_bw() 
-
-# shore
-ggbiplot(envPCA3,scale=0,labels=1:22,groups=BMIenvWideDF_trans$shore) +
-  expand_limits(x=c(NA,2),
-                y=c(NA,2.5)) +
-  scale_color_viridis_d(end=0.9) +
-  theme_bw() 
-
-# lotic
-ggbiplot(envPCA3,scale=0,labels=1:22,groups=BMIenvWideDF_trans$lotic) +
-  expand_limits(x=c(NA,2),
-                y=c(NA,2.5)) +
-  scale_color_viridis_d(end=0.8) +
-  theme_bw() 
-
-# fish presence
-ggbiplot(envPCA3,scale=0,groups=as.factor(BMIenvWideDF_trans$fish_presence)) +
+## Variable-preserving
+ggbiplot(envPCA2_pr,scale=1,labels=1:22) +
   expand_limits(x=c(NA,2),
                 y=c(NA,2)) +
-  theme_bw()
+  theme_bw() 
+
+
+
+
+
+
 
 
 
 ## ggplot with ggfortify
-autoplot(envPCA3,loadings=TRUE,loadings.label=TRUE,shape=FALSE,
+autoplot(envPCA2_pr,loadings=TRUE,loadings.label=TRUE,shape=FALSE,
          loadings.label.repel=TRUE) +
-  geom_point(aes(color=BMIenvWideDF_trans$shore)) +
-  #expand_limits(x=c(-0.5,0.5)) +
+  geom_point(aes(color=BMIenvWideDF_trans$shore),alpha=0.3) +
+  labs(color="shore") +
   theme_bw()
 
 
@@ -341,16 +352,18 @@ autoplot(envPCA3,loadings=TRUE,loadings.label=TRUE,shape=FALSE,
  #----------------------------------------------------------------------------------------------
 
 ## DONE
+# went back to data setup script and re-classified more chr vars as fcts
+# output ggbiplots as a list with grouping variable and with/without ellipses
+# started working on variable-preserving biplots
+
+
+
+## LAST COMMIT
 #re-ran PCA after dropping nitrate, including stats and plots
 #improved ggbiplot aesthetics
 
-## LAST COMMIT
-#began PCA of env vars
-#computed stats and made biplots of PCAs using prcomp and princomp and prcomp with and without
-#nitrate
 
 ## TO DO
-#change fish_presence and lotic to factors in data setup code, and then re-try map()
 #streamline upstream (particularly plotting) code in this script
 
 #consider doing some plots of diversity (family richness, index)
