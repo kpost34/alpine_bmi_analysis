@@ -11,6 +11,7 @@ select<-dplyr::select
 source(here::here("code","01_DataSetup.R"))
 source(here::here("code","02a_EDA_functions.R"))
 source(here::here("code","03a_PCA_functions.R"))
+source(here::here("code","Skalski_ANoD_function.R"))
 
 
 
@@ -138,7 +139,7 @@ BMIenvWideDF %>%
 
 
 ##### PCA===========================================================================================
-#### Run PCA
+#### Run PCA----------------------------------------------------------------------------------------
 ### prcomp
 BMIenvWideDF_trans %>%
   #select sites + env vars
@@ -159,7 +160,7 @@ BMIenvWideDF_trans %>%
 
 
 
-#### Display output (statistics)
+#### Display output (statistics)--------------------------------------------------------------------
 ### sds
 envPCA1_pr
 envPCA1_prin
@@ -200,7 +201,7 @@ abline(h=mean(envPCA1_pr$sdev^2))
 
 
 
-#### Visualize biplot
+#### Visualize biplot-------------------------------------------------------------------------------
 ### Base R
 biplot(envPCA1_pr)
 
@@ -209,7 +210,7 @@ ggbiplot(envPCA1_pr) +
   theme_bw()
 
 ## ggplot with ggfortify
-autoplot(envPCA1,loadings=TRUE,loadings.label=TRUE,shape=FALSE,
+autoplot(envPCA1_pr,loadings=TRUE,loadings.label=TRUE,shape=FALSE,
          loadings.label.repel=TRUE) +
   expand_limits(x=c(-0.5,0.5)) +
   theme_bw()
@@ -217,7 +218,7 @@ autoplot(envPCA1,loadings=TRUE,loadings.label=TRUE,shape=FALSE,
 
 
 
-#### Run PCA (after removing nitrate)
+#### Run PCA (after removing nitrate)---------------------------------------------------------------
 ### prcomp
 BMIenvWideDF_trans %>%
   #select sites + env vars
@@ -264,7 +265,7 @@ abline(h=mean(envPCA2_pr$sdev^2))
 #3) PC1 only above broken stick distribution
  
 
-#### Visualizations
+#### Visualizations---------------------------------------------------------------------------------
 ### Biplot (base)
 biplot(envPCA1_pr)
 biplot(envPCA2_pr)
@@ -283,7 +284,7 @@ ggbiplot(envPCA2_pr,scale=0,labels=1:22) +
 ggbiplot(envPCA2_pr,scale=0,labels=1:22,groups=BMIenvWideDF_trans$lotic,ellipse=TRUE) +
   expand_limits(x=c(NA,2),
                 y=c(NA,2)) +
-  theme_bw() 
+  theme_bw()
 
 
 # map 
@@ -320,6 +321,14 @@ bmi_cat_vars %>%
   }) -> bmi_ggbiplot_list_ell
 
 
+## ggplot with ggfortify (and shore as a categorical variable)
+autoplot(envPCA2_pr,loadings=TRUE,loadings.label=TRUE,shape=FALSE,
+         loadings.label.repel=TRUE) +
+  geom_point(aes(color=BMIenvWideDF_trans$shore),alpha=0.3) +
+  labs(color="shore") +
+  theme_bw()
+
+
 ## Variable-preserving
 ggbiplot(envPCA2_pr,scale=1,labels=1:22) +
   expand_limits(x=c(NA,2),
@@ -328,18 +337,82 @@ ggbiplot(envPCA2_pr,scale=1,labels=1:22) +
 
 
 
+#### Run ANOVAs (distance-preserving)---------------------------------------------------------------
+### Wrangle data
+BMIenvWideDF_trans %>%
+  select(local_site,fish_presence,lotic) %>% 
+  mutate(site=row_number() %>% as.character,.before="local_site") %>%
+  left_join(
+    envPCA2_pr$x %>%
+      as.data.frame() %>%
+      select(PC1,PC2) %>%
+      rownames_to_column(var="site")
+  ) %>%
+  pivot_longer(cols=starts_with("PC"),names_to="PC",values_to="scores") -> envPCA2_pr_anovaDF
+             
+            
+### Run ANOVAs
+## local_site
+
+# Omnibus test
+envPCA2_pr_anovaDF %>%
+  select(site,local_site,PC,scores) %>%
+  pivot_wider(id_cols=c("site","local_site"),names_from="PC",values_from="scores")  %>%
+  select(-site) %>%
+  as.data.frame() %>%
+  Skalski.adonis(PC.axes=c(2,3),Groups=1) #significantly different
+
+# By axis
+envPCA2_pr_anovaDF %>%
+  group_by(PC) %>%
+  anova_test(scores ~ local_site,detailed=TRUE)
+#significant differences among local_sites on each PC
+
+#groups form clear custers in PC space, which is affected by both PC1 and 2 (PC1 has greater 
+  #affect from a visual standpoint, which is supported by the ANOVA).
+
+
+## fish_presence
+# Omnibus test
+envPCA2_pr_anovaDF %>%
+  select(site,fish_presence,PC,scores) %>%
+  pivot_wider(id_cols=c("site","fish_presence"),names_from="PC",values_from="scores")  %>%
+  select(-site) %>%
+  as.data.frame() %>%
+  Skalski.adonis(PC.axes=c(2,3),Groups=1) #significantly different
+
+# By axis
+envPCA2_pr_anovaDF %>%
+  group_by(PC) %>%
+  t_test(scores ~ fish_presence,detailed=TRUE)
+#significant differences between fish_presence groups for PC1 only
+
+#interpretation from biplot:
+#supported in that ellipses show clear separation between the two groups; however, PC1 is clearly
+  #more discriminatory. PC1 is negatively associated with sat and elevation and positively with
+  #temp & DO, which likely influence fish ecology than pH, which is positively associated with PC2
 
 
 
 
+## lotic
+# Omnibus test
+envPCA2_pr_anovaDF %>%
+  select(site,lotic,PC,scores) %>%
+  pivot_wider(id_cols=c("site","lotic"),names_from="PC",values_from="scores")  %>%
+  select(-site) %>%
+  as.data.frame() %>%
+  Skalski.adonis(PC.axes=c(2,3),Groups=1) #significant
 
+# By axis
+envPCA2_pr_anovaDF %>%
+  group_by(PC) %>%
+  t_test(scores ~ lotic,detailed=FALSE)
+#significant differences between lotic for PC 2 only
 
-## ggplot with ggfortify
-autoplot(envPCA2_pr,loadings=TRUE,loadings.label=TRUE,shape=FALSE,
-         loadings.label.repel=TRUE) +
-  geom_point(aes(color=BMIenvWideDF_trans$shore),alpha=0.3) +
-  labs(color="shore") +
-  theme_bw()
+#interpretation: clear separation between lotic groups, which is mostly due to PC2 (although
+  #a shift along PC2), which is supported by omnibus and PC-separated ANOVAs
+
 
 
 
@@ -352,15 +425,16 @@ autoplot(envPCA2_pr,loadings=TRUE,loadings.label=TRUE,shape=FALSE,
  #----------------------------------------------------------------------------------------------
 
 ## DONE
-# went back to data setup script and re-classified more chr vars as fcts
-# output ggbiplots as a list with grouping variable and with/without ellipses
-# started working on variable-preserving biplots
+#ran an ANOVA and t-tests on scores from distance-preserving biplots according to the three most
+  #discriminating factors/cat vars
+#ran omnibus tests and began to interpret results using test results, biplots, and loadings
 
 
 
 ## LAST COMMIT
-#re-ran PCA after dropping nitrate, including stats and plots
-#improved ggbiplot aesthetics
+# went back to data setup script and re-classified more chr vars as fcts
+# output ggbiplots as a list with grouping variable and with/without ellipses
+# started working on variable-preserving biplots
 
 
 ## TO DO
