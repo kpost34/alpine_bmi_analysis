@@ -424,23 +424,12 @@ envPCA2_pr_anovaDF %>%
 
  #----------------------------------------------------------------------------------------------
 
-## DONE
+
+## LAST COMMIT
 #ran an ANOVA and t-tests on scores from distance-preserving biplots according to the three most
   #discriminating factors/cat vars
 #ran omnibus tests and began to interpret results using test results, biplots, and loadings
 
-
-
-## LAST COMMIT
-# went back to data setup script and re-classified more chr vars as fcts
-# output ggbiplots as a list with grouping variable and with/without ellipses
-# started working on variable-preserving biplots
-
-
-## TO DO
-#streamline upstream (particularly plotting) code in this script
-
-#consider doing some plots of diversity (family richness, index)
 
 
 
