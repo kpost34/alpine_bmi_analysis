@@ -6,7 +6,7 @@
 pacman::p_load(here,rstatix,MASS,GGally,vegan,ggfortify,ggbiplot)
 
 select<-dplyr::select
-
+filter<-dplyr::filter
 
 source(here::here("code","01_DataSetup.R"))
 source(here::here("code","02a_EDA_functions.R"))
@@ -45,7 +45,7 @@ BMIenvWideDF %>%
 ## Transform data (5/6 quantitative var)
 # Wide format
 BMIenvWideDF %>%
-  mutate(across(c(elevation,temp,DO:nitrate),~boxcoxer(.x),.names="{.col}_trans")) %>%
+  mutate(across(c(elevation,temp,DO:nitrate),~boxcoxer(.x),.names="{.col}_trans")) %>% 
   select(-c(elevation,temp,DO:nitrate)) -> BMIenvWideDF_trans
 
 # Tidy format
@@ -86,13 +86,15 @@ BMIenvWideDF_trans %>%
 # Wide format
 BMIenvWideDF %>%
   #log, sqrt, inverse transforms
-  mutate(across(ph:nitrate,list(boxcox=boxcoxer,log=log10,sqrt=sqrt,inverse=inverse))) -> BMIenvWideDF_trans2
+  mutate(across(ph:nitrate,
+                list(boxcox=boxcoxer,log=log10,sqrt=sqrt,inverse=inverse))) -> BMIenvWideDF_trans2
 
 # Tidy format
 BMIenvWideDF_trans2 %>% 
   #make fish_presence and lotic numeric for pivot
   mutate(across(fish_presence:lotic,as.numeric)) %>%
-  pivot_longer(cols=!c(local_site:date,shore), names_to="variable",values_to="value") -> BMIenvTidyDF_trans2
+  pivot_longer(cols=!c(local_site:date,shore), 
+               names_to="variable",values_to="value") -> BMIenvTidyDF_trans2
 
 
 
@@ -340,7 +342,7 @@ ggbiplot(envPCA2_pr,scale=1,labels=1:22) +
 #### Run ANOVAs (distance-preserving)---------------------------------------------------------------
 ### Wrangle data
 BMIenvWideDF_trans %>%
-  select(local_site,fish_presence,lotic) %>% 
+  select(local_site,location,fish_presence,lotic) %>% 
   mutate(site=row_number() %>% as.character,.before="local_site") %>%
   left_join(
     envPCA2_pr$x %>%
@@ -353,7 +355,6 @@ BMIenvWideDF_trans %>%
             
 ### Run ANOVAs
 ## local_site
-
 # Omnibus test
 envPCA2_pr_anovaDF %>%
   select(site,local_site,PC,scores) %>%
@@ -368,8 +369,31 @@ envPCA2_pr_anovaDF %>%
   anova_test(scores ~ local_site,detailed=TRUE)
 #significant differences among local_sites on each PC
 
-#groups form clear custers in PC space, which is affected by both PC1 and 2 (PC1 has greater 
+#groups form clear clusters in PC space, which is affected by both PC1 and 2 (PC1 has greater 
   #affect from a visual standpoint, which is supported by the ANOVA).
+
+
+## location
+# Omnibus test
+envPCA2_pr_anovaDF %>%
+  select(site,location,PC,scores) %>%
+  pivot_wider(id_cols=c("site","location"),names_from="PC",values_from="scores")  %>%
+  select(-site) %>%
+  as.data.frame() %>%
+  Skalski.adonis(PC.axes=c(2,3),Groups=1) 
+#NS
+
+
+# By axis
+envPCA2_pr_anovaDF %>%
+  group_by(PC) %>%
+  anova_test(scores ~ location,detailed=TRUE)
+#significant differences for PC2 only
+
+#looking at the biplot, it's clear that PC2 does a 'better job' of discriminating the categories
+  #than PC1. However, there is stil clear overlap on this axis for a subset of the groups
+#further, the anova results indicate that a low within-group variances along PC2 may be driving
+  #this relationship
 
 
 ## fish_presence
