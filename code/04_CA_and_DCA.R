@@ -3,7 +3,7 @@
 
 
 #### Source DFs (and load packages)=================================================================
-pacman::p_load(here,MASS,vegan)
+pacman::p_load(here,MASS,vegan,rstatix,GGally)
 
 select<-dplyr::select
 
@@ -122,7 +122,7 @@ BMIenvcountWideDF %>%
 plot(bmiDCA_dec,choices=c(1,2),type="n")
 text(bmiDCA_dec,display="sites",col="black",cex=0.5)
 points(bmiDCA_dec,display="species",pch=16,cex=0.5,col="red")
-plot(BMIenvfit,choices=c(1,2))
+plot(BMIenvfit_all,choices=c(1,2))
 #very cluttered because of factors
 
 # Only 0-1 factors
@@ -189,16 +189,132 @@ ord.on.env.arrows(ordination.site.scores=bmiDCA_dec$rproj[,1:2],
                   arrow.col="blue",arrow.scale=5,
                   choices=c(1,2))
 
+#notice that temp and sat are highly correlated with DCA 1 (temp = - and sat = +)
+#but multicollinearity could be at play
+
+## Assess multicollinearity
+# Look at bivariate scatter plots and correlations of env data
+BMIenvcountWideDF %>%
+  select(elevation:nitrate) %>%
+  pairs()
+
+BMIenvcountWideDF %>%
+  select(elevation:nitrate) %>% 
+  ggpairs(lower=list(continuous="smooth"))
+
+#strong correlations: DO-sat (.968) and DO-temp (-0.745) (and perhaps temp-sat; -0.63)
+
+# Run PCA on these three variables
+#pca
+BMIenvcountWideDF %>%
+  #select sites + env vars of interest
+  select(project_site,temp:DO) %>%
+  #formula input using scaled and centered variables
+  prcomp(~temp + sat + DO,
+         data=.,scale.=TRUE,center=TRUE) -> tempDOsat_PCA_pr
+
+tempDOsat_PCA_pr
+summary(tempDOsat_PCA_pr)
+
+screeplot(tempDOsat_PCA_pr,bstick=TRUE,type="barplot",
+          main="PCA of alpine lakes environmental variables")
+abline(h=mean(tempDOsat_PCA_pr$sdev^2))
+#clearly only PCA1 matters (i.e., EV drops most from PCA1-2 and EV of PCA2 is below broken stick
+  #and avg EV)
+
+#combine PCA1 scores with env vars and re-plot without multicollinearity
+tempDOsat_PCA_pr %>%
+  .[["x"]] %>%
+  as_tibble() %>%
+  select(PC1) %>%
+  bind_cols(
+    BMIenvcountWideDF %>% 
+      select(-c(temp,DO,sat)) 
+  ) %>%
+  relocate(PC1,.after="nitrate") -> BMIenvcountWideDF_compvar
+
+#check multicollinearity
+BMIenvcountWideDF_compvar %>% 
+  select(elevation:PC1) %>%
+  ggpairs(lower=list(continuous="smooth"))
+#now highest cor is -.602
+
+
+# Re-plot correlations 
+#between each env var and all ordination axes
+#DCA1 & 2
+BMIenvcountWideDF_compvar %>%
+  #select env vars only
+  select(elevation:PC1) %>%
+  envfit(ord=bmiDCA_dec,
+         choices=1:3) -> BMIenvfit_compvar_numonly
+
+#DCA1 & 2
+plot(bmiDCA_dec,choices=c(1,2),type="n")
+text(bmiDCA_dec,display="sites",col="black",cex=0.5)
+points(bmiDCA_dec,display="species",pch=16,cex=0.5,col="red")
+plot(BMIenvfit_compvar_numonly,choices=c(1,2))
+
+#DCA1 & 3
+plot(bmiDCA_dec,choices=c(1,3),type="n")
+text(bmiDCA_dec,display="sites",col="black",cex=0.5)
+points(bmiDCA_dec,display="species",pch=16,cex=0.5,col="red")
+plot(BMIenvfit_compvar_numonly,choices=c(1,3))
+
+#DCA2 & 3
+plot(bmiDCA_dec,choices=c(2,3),type="n")
+text(bmiDCA_dec,display="sites",col="black",cex=0.5)
+points(bmiDCA_dec,display="species",pch=16,cex=0.5,col="red")
+plot(BMIenvfit_compvar_numonly,choices=c(2,3))
+
+
+#between each ordination axis and all env vars (with comp variable)
+plot(bmiDCA_dec,choices=c(1,2),type="n")
+text(bmiDCA_dec,display="sites",col="black",cex=0.5)
+points(bmiDCA_dec,display="species",pch=16,cex=0.5,col="red")
+ord.on.env.arrows(ordination.site.scores=bmiDCA_dec$rproj[,1:2],
+                  env.matrix=BMIenvcountWideDF_compvar %>%
+                    select(elevation:PC1),
+                  arrow.col="blue",arrow.scale=5,
+                  choices=c(1,2))
+
+
+#plot DCA1&2 side-by-side
+par(mfrow=c(1,2))
+
+plot(bmiDCA_dec,choices=c(1,2),type="n")
+text(bmiDCA_dec,display="sites",col="black",cex=0.5)
+points(bmiDCA_dec,display="species",pch=16,cex=0.5,col="red")
+plot(BMIenvfit_compvar_numonly,choices=c(1,2))
+
+plot(bmiDCA_dec,choices=c(1,2),type="n")
+text(bmiDCA_dec,display="sites",col="black",cex=0.5)
+points(bmiDCA_dec,display="species",pch=16,cex=0.5,col="red")
+ord.on.env.arrows(ordination.site.scores=bmiDCA_dec$rproj[,1:2],
+                  env.matrix=BMIenvcountWideDF_compvar %>%
+                    select(elevation:PC1),
+                  arrow.col="blue",arrow.scale=5,
+                  choices=c(1,2))
+
+#interpretation: check that env vars are lining up properly with rest of data because
+  #patterns are quite different between two regression approaches
+
+#### NOTE: NEED to QC this work
+
+
+### Plot DCA scores colored by factor variable
+#p. 179
+
+
+#---------------------------------------------------------------------------------------------------
 ## DONE
-# cleaned up code on CA and DCA to ensure appropriate comparisons among bmi and env data
-# added an analysis to PCA code
-# performed spearman corrs of env vars & DCA axes 1-3 and plotted results
-# added ord.on.env.arrows() function script
+
+
 
 
 
 
 #### LAST COMMIT
-# created this script and began performing CA & DCA
-# added Skalski ANoD function script
+# multicollinearity test, followed by PCA, and incorporation of PCA site scores
+  #in regression
 
