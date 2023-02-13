@@ -138,12 +138,16 @@ BMIenvWideDF %>%
   #will be kept in mind and could lead to a re-analysis of the data
 
 
-
+#### Save transformed data frames
+BMIenvWideDF_trans %>%
+  left_join(BMIcountWideDF) -> BMIenvcountWideDF_trans
+# saveRDS(BMIenvWideDF_trans,here::here("data","tidy_data",paste0("alpine_bmi_env_trans_",Sys.Date(),".rds")))
+# saveRDS(BMIenvcountWideDF_trans,here::here("data","tidy_data",paste0("alpine_bmi_env_n_trans_",Sys.Date(),".rds")))
 
 ##### PCA===========================================================================================
 #### Run PCA----------------------------------------------------------------------------------------
 ### prcomp
-BMIenvWideDF_trans %>%
+BMIenvWideDF_trans %>% 
   #select sites + env vars
   select(project_site,sat,elevation_trans:last_col()) %>%
   #formula input using scaled and centered variables
