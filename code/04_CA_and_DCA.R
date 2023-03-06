@@ -3,7 +3,7 @@
 
 
 #### Source DFs (and load packages)=================================================================
-pacman::p_load(here,MASS,vegan,rstatix,GGally)
+pacman::p_load(here,tidyverse,MASS,vegan,rstatix,GGally)
 
 select<-dplyr::select
 filter<-dplyr::filter
@@ -309,13 +309,110 @@ ord.on.env.arrows(ordination.site.scores=bmiDCA_dec$rproj[,1:2],
                   choices=c(1,2))
 title("axis~environmental variables")
 
+#explanation:
+#left plot: each env var and all chosen ordination axes (i.e., how does the combination of ordination
+  #axes predict each env var)
+  #show correlations between env vars and ord axes
+
+
+#right plot: each ordination axis and all env vars (i.e., how does the combination of env vars
+#predict each ordination axis)
+  #partial regression coefs = amount by which 1 unit change in each env var would change pos of a site
+    #along that axis if all of the other vars didn't change
+#show *partial* correlations between env vars and ord axes
+
+
 #interpretation:
-#unsure b/c of different pattern in plots--need to return to later
+#left plot: the strongest organizing variables are elevation (~0 DCA1, + DCA2) and temp (~0 DCA1, 
+  #- DCA2); no env var is strongly + or -
+#right plot: greater separation of variables along DCA1 & 2
+  #sites with + DCA1 and 0 DCA2 associated with elevation, nitrate, and PC1 (sat & DO)
+  #sites with - DCA1 and moderate - DCA2 associated with temp
+  #sites with ~0 DCA1 and + DCA2 = pH
+
+#given that axis ~ env vars is more in line with how DCA is viewed (ord axis represents a composite
+  #of env vars) and that it takes into account other variables, it's preferred
+  #thus
+
+
+### Plot DCA scores colored by factor variable (location, fish_presence, lotic, shore)
+## Create list of inputs for plots
+factor_vec<-c("local_site","location","fish_presence","lotic","shore")
+
+factor_vec %>%
+  map(function(x){
+    fac<-BMIenvcountWideDF_compvar %>% pull(!!sym(x)) %>% as.factor()
+    text_legend<-levels(fac)
+
+    levels(fac)<-viridis(length(levels(fac)),end=.85)
+    col_vec<-as.character(fac)
+    col_legend<-levels(fac)
+    
+    list(x,col_vec,text_legend,col_legend)
+  }) -> fac_list
+
+
+## Make plots
+par(mfrow=c(1,1))
+# local_site
+plot(bmiDCA_dec,choices=c(1,2),type="n",xlim=c(-1,2),ylim=c(-0.5,0.5))
+title(fac_list[[1]][[1]])
+points(bmiDCA_dec,display="sites",pch=16,cex=1.5,col=fac_list[[1]][[2]])
+legend("bottomright",
+       legend=fac_list[[1]][[3]],
+       pch=16,
+       col=fac_list[[1]][[4]])
+#no clear pattern...ALB sites generaly moderately negative for both DC axes
+
+
+# location
+plot(bmiDCA_dec,choices=c(1,2),type="n",xlim=c(-1,2),ylim=c(-0.5,0.5))
+title(fac_list[[2]][[1]])
+points(bmiDCA_dec,display="sites",pch=16,cex=1.5,col=fac_list[[2]][[2]])
+legend("bottomright",
+       legend=fac_list[[2]][[3]],
+       pch=16,
+       col=fac_list[[2]][[4]])
+#no clear pattern...creek sites typically are near origin and moderately - for both DC axes
+
+
+# fish_presence
+plot(bmiDCA_dec,choices=c(1,2),type="n",xlim=c(-1,2),ylim=c(-0.5,0.5))
+title(fac_list[[3]][[1]])
+points(bmiDCA_dec,display="sites",pch=16,cex=1.5,col=fac_list[[3]][[2]])
+legend("bottomright",
+       legend=fac_list[[3]][[3]],
+       pch=16,
+       col=fac_list[[3]][[4]])
+#no clear pattern
+#generally, 1 = close to origin but 1 = spread out
+
+
+# lotic
+plot(bmiDCA_dec,choices=c(1,2),type="n",xlim=c(-1,2),ylim=c(-0.5,0.5))
+title(fac_list[[4]][[1]])
+points(bmiDCA_dec,display="sites",pch=16,cex=1.5,col=fac_list[[4]][[2]])
+legend("bottomright",
+       legend=fac_list[[4]][[3]],
+       pch=16,
+       col=fac_list[[4]][[4]])
+#no clear pattern
+#generally, lotic = 1 has slightly negative DCA1, while lotic = 0 has DCA2 > 0 and DCA1 ~ 0 +
+
+
+# shore
+plot(bmiDCA_dec,choices=c(1,2),type="n",xlim=c(-1,2),ylim=c(-0.5,0.5))
+title(fac_list[[5]][[1]])
+points(bmiDCA_dec,display="sites",pch=16,cex=1.5,col=fac_list[[5]][[2]])
+legend("bottomright",
+       legend=fac_list[[5]][[3]],
+       pch=16,
+       col=fac_list[[5]][[4]])
+#no real pattern
 
 
 
-### Plot DCA scores colored by factor variable
-#p. 179
+
 
 
 #---------------------------------------------------------------------------------------------------
@@ -326,6 +423,6 @@ title("axis~environmental variables")
 
 
 #### LAST COMMIT
-# wrote transformed env DFs (with and without counts) to files
-# re-ran 04. code with transformed env data
+# added interpretation of the two types of DCAs
+# created DCA plots where sites were colored by factors
 
