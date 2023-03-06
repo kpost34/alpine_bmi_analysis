@@ -471,6 +471,5 @@ points(x=rare_bmiDCA_dec$DCA1,y=rare_bmiDCA_dec$DCA2,pch=16,cex=1.5,col="red")
 
 
 #### LAST COMMIT
-# added interpretation of the two types of DCAs
-# created DCA plots where sites were colored by factors
+# colored 'species' scores on DCA biplot by generic abundance
 
