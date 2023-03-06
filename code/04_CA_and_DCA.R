@@ -3,7 +3,7 @@
 
 
 #### Source DFs (and load packages)=================================================================
-pacman::p_load(here,tidyverse,MASS,vegan,rstatix,GGally)
+pacman::p_load(here,tidyverse,MASS,vegan,rstatix,GGally,viridis)
 
 select<-dplyr::select
 filter<-dplyr::filter
@@ -11,12 +11,25 @@ filter<-dplyr::filter
 
 # source(here::here("code","01_DataSetup.R"))
 BMIenvWideDF_trans<-readRDS(here::here("data","tidy_data","alpine_bmi_env_trans_2023-02-12.rds"))
-BMIenvcountWideDF_trans<-readRDS(here::here("data","tidy_data","alpine_bmi_env_n_trans_2023-02-12.rds"))
+BMIenvcountWideDF_trans0<-readRDS(here::here("data","tidy_data","alpine_bmi_env_n_trans_2023-02-12.rds"))
 
 source(here::here("code","DCA_Env_Arrows_function.R"))
 
 
 #### Correspondence Analysis========================================================================
+### Update DF by removing absent genera
+## Identify genera that are present
+dca_tax_nm<-BMIenvcountWideDF_trans %>%
+  select(starts_with("Amphi"):last_col()) %>%
+  summarize(across(everything(),sum)) %>%
+  select_if(~any(.>0)) %>%
+  names() 
+
+## Retain those genera
+BMIenvcountWideDF_trans<-BMIenvcountWideDF_trans0 %>% 
+  select(local_site:nitrate_trans,all_of(dca_nm))
+  
+
 ### Start with site x species matrix with sites as rows, species (taxa) as cols, and cells as counts, 
   #biomass, etc
 BMIenvcountWideDF_trans %>% 
@@ -411,9 +424,44 @@ legend("bottomright",
 #no real pattern
 
 
+## Look at species associated with DCA scores
+## Species scores
+summary(bmiDCA_dec)
+bmiDCA_dec$cproj
 
+## Plot species scores
+# Sort species by abundance
+BMIenvcountWideDF_compvar %>% 
+  select(starts_with("Amphipoda"):last_col()) %>%
+  colSums() %>%
+  sort(decreasing=TRUE) -> tax_n
 
+#grab names
+tax_n %>%
+  names() %>% 
+  as_tibble() %>%
+  mutate(value=paste0(str_sub(value,1,3),str_extract(value,"_[:alpha:]{5}"))) %>%
+  pull() -> tax_n_abbrv
 
+# Subset most abundant species
+comm_bmiDCA_dec<-bmiDCA_dec %>%
+       .[["cproj"]] %>%
+       as.data.frame() %>%
+       .[tax_n_abbrv[1:3],]
+
+# Subset rarest species (that are present)
+rare_bmiDCA_dec<-bmiDCA_dec %>%
+       .[["cproj"]] %>%
+       as.data.frame() %>%
+       .[tax_n_abbrv[10:13],]
+
+# All species
+plot(bmiDCA_dec,choices=c(1,2),type="n",xlim=c(-3,3),ylim=c(-1,1))
+points(bmiDCA_dec,display="species",pch=16,col="gray50")
+points(x=comm_bmiDCA_dec$DCA1,y=comm_bmiDCA_dec$DCA2,pch=16,cex=1.5,col="black")
+points(x=rare_bmiDCA_dec$DCA1,y=rare_bmiDCA_dec$DCA2,pch=16,cex=1.5,col="red")
+#most common genera in black and rarest genera in red
+#interpretation: 3/4 rarest species near edges of DCA2 
 
 #---------------------------------------------------------------------------------------------------
 ## DONE
