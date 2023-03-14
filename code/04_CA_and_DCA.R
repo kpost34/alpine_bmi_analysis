@@ -258,8 +258,8 @@ satDO_PCA_pr[["x"]] %>%
 
 
 ### Write new file
-saveRDS(BMIenvcountWideDF_compvar,
-        here("data","tidy_data",paste0("alpine_bmi_env_n_trans_compVar_noMiss_",Sys.Date())))
+# saveRDS(BMIenvcountWideDF_compvar,
+#         here("data","tidy_data",paste0("alpine_bmi_env_n_trans_compVar_noMiss_",Sys.Date(),".rds")))
 
 #check multicollinearity
 BMIenvcountWideDF_compvar %>% 
