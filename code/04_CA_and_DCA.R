@@ -19,7 +19,7 @@ source(here::here("code","DCA_Env_Arrows_function.R"))
 #### Correspondence Analysis========================================================================
 ### Update DF by removing absent genera
 ## Identify genera that are present
-dca_tax_nm<-BMIenvcountWideDF_trans %>%
+dca_tax_nm<-BMIenvcountWideDF_trans0 %>%
   select(starts_with("Amphi"):last_col()) %>%
   summarize(across(everything(),sum)) %>%
   select_if(~any(.>0)) %>%
@@ -27,7 +27,7 @@ dca_tax_nm<-BMIenvcountWideDF_trans %>%
 
 ## Retain those genera
 BMIenvcountWideDF_trans<-BMIenvcountWideDF_trans0 %>% 
-  select(local_site:nitrate_trans,all_of(dca_nm))
+  select(local_site:nitrate_trans,all_of(dca_tax_nm))
   
 
 ### Start with site x species matrix with sites as rows, species (taxa) as cols, and cells as counts, 
@@ -249,16 +249,21 @@ abline(h=mean(satDO_PCA_pr$sdev^2))
 #combine PCA1 scores with env vars and re-plot without multicollinearity
 satDO_PCA_pr[["x"]] %>%
   as_tibble() %>%
-  select(PC1) %>%
+  select(oxygen="PC1") %>%
   bind_cols(
     BMIenvcountWideDF_trans %>% 
       select(-c(DO_trans,sat)) 
   ) %>%
-  relocate(PC1,.after="nitrate_trans") -> BMIenvcountWideDF_compvar
+  relocate(oxygen,.after="nitrate_trans") -> BMIenvcountWideDF_compvar
+
+
+### Write new file
+saveRDS(BMIenvcountWideDF_compvar,
+        here("data","tidy_data",paste0("alpine_bmi_env_n_trans_compVar_noMiss_",Sys.Date())))
 
 #check multicollinearity
 BMIenvcountWideDF_compvar %>% 
-  select(elevation_trans:PC1) %>%
+  select(elevation_trans:oxygen) %>%
   ggpairs(lower=list(continuous="smooth"))
 #now highest cor is -.714
 
@@ -268,7 +273,7 @@ BMIenvcountWideDF_compvar %>%
 #DCA1 & 2
 BMIenvcountWideDF_compvar %>%
   #select env vars only
-  select(elevation_trans:PC1) %>%
+  select(elevation_trans:oxygen) %>%
   envfit(ord=bmiDCA_dec,
          choices=1:3) -> BMIenvfit_compvar_numonly
 
@@ -298,7 +303,7 @@ text(bmiDCA_dec,display="sites",col="black",cex=0.5)
 points(bmiDCA_dec,display="species",pch=16,cex=0.5,col="red")
 ord.on.env.arrows(ordination.site.scores=bmiDCA_dec$rproj[,1:2],
                   env.matrix=BMIenvcountWideDF_compvar %>%
-                    select(elevation_trans:PC1),
+                    select(elevation_trans:oxygen),
                   arrow.col="blue",arrow.scale=5,
                   choices=c(1,2))
 
@@ -317,7 +322,7 @@ text(bmiDCA_dec,display="sites",col="black",cex=0.5)
 points(bmiDCA_dec,display="species",pch=16,cex=0.5,col="red")
 ord.on.env.arrows(ordination.site.scores=bmiDCA_dec$rproj[,1:2],
                   env.matrix=BMIenvcountWideDF_compvar %>%
-                    select(elevation_trans:PC1),
+                    select(elevation_trans:oxygen),
                   arrow.col="blue",arrow.scale=4,
                   choices=c(1,2))
 title("axis~environmental variables")
@@ -339,7 +344,7 @@ title("axis~environmental variables")
 #left plot: the strongest organizing variables are elevation (~0 DCA1, + DCA2) and temp (~0 DCA1, 
   #- DCA2); no env var is strongly + or -
 #right plot: greater separation of variables along DCA1 & 2
-  #sites with + DCA1 and 0 DCA2 associated with elevation, nitrate, and PC1 (sat & DO)
+  #sites with + DCA1 and 0 DCA2 associated with elevation, nitrate, and oxygen (sat & DO)
   #sites with - DCA1 and moderate - DCA2 associated with temp
   #sites with ~0 DCA1 and + DCA2 = pH
 
