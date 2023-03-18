@@ -3,7 +3,7 @@
 
 
 #### Source DF (and load packages)=================================================================
-pacman::p_load(here,tidyverse,vegan,smacof)
+pacman::p_load(here,tidyverse,viridis,vegan,smacof)
 
 select<-dplyr::select
 filter<-dplyr::filter
@@ -61,6 +61,78 @@ bmi_pcoa$GOF
 100*bmi_pcoa$eig[1:2]/sum(bmi_pcoa$eig)
 
 
+### Plot PCoA
+## Combine PCoA points with env data
+bmi_pcoa_envDF<-bmi_pcoa$points %>%
+  bind_cols(
+    bmi_envDF %>%
+      select(local_site,location,fish_presence:oxygen)
+  )
+
+## Create list of inputs for plots
+factor_vec<-c("local_site","location","fish_presence","lotic","shore")
+
+factor_vec %>%
+  purrr::map(function(x){
+    fac<-bmi_pcoa_envDF %>% pull(x) %>% as.factor()
+    
+    text_legend<-levels(fac)
+
+    levels(fac)<-viridis(length(levels(fac)),end=.85)
+    col_vec<-as.character(fac)
+    col_legend<-levels(fac)
+    
+    list(x,col_vec,text_legend,col_legend)
+  }) -> fac_list
+
+
+## Construct plots
+par(mfrow=c(1,1))
+#local_site
+plot(bmi_pcoa,xlab="PCoA axis 1",ylab="PCoA axis 2",type="n")
+title(fac_list[[1]][[1]])
+points(bmi_pcoa_envDF$Dim1,bmi_pcoa_envDF$Dim2,col=fac_list[[1]][[2]],pch=16,cex=1.25)
+legend("bottomright",
+       legend=fac_list[[1]][[3]],
+       pch=16,
+       col=fac_list[[1]][[4]])
+#no clear pattern
+
+#location
+plot(bmi_pcoa,xlab="PCoA axis 1",ylab="PCoA axis 2",type="n")
+title(fac_list[[2]][[1]])
+points(bmi_pcoa_envDF$Dim1,bmi_pcoa_envDF$Dim2,col=fac_list[[2]][[2]],pch=16,cex=1.25)
+legend("bottomright",
+       legend=fac_list[[2]][[3]],
+       pch=16,
+       col=fac_list[[2]][[4]])
+#no clear pattern
+
+#fish_presence
+plot(bmi_pcoa,xlab="PCoA axis 1",ylab="PCoA axis 2",type="n")
+title(fac_list[[3]][[1]])
+points(bmi_pcoa_envDF$Dim1,bmi_pcoa_envDF$Dim2,col=fac_list[[3]][[2]],pch=16,cex=1.25)
+legend("bottomright",
+       legend=fac_list[[3]][[3]],
+       pch=16,
+       col=fac_list[[3]][[4]])
+#not much of a pattern--fish tend to cluster at ~PCoA1 from -0.2 to 0.2 and PCoA2 ~ 0.25 but there
+  #are 3 'stray' points
+
+#lotic
+plot(bmi_pcoa,xlab="PCoA axis 1",ylab="PCoA axis 2",type="n")
+title(fac_list[[4]][[1]])
+points(bmi_pcoa_envDF$Dim1,bmi_pcoa_envDF$Dim2,col=fac_list[[4]][[2]],pch=16,cex=1.25)
+legend("bottomright",
+       legend=fac_list[[4]][[3]],
+       pch=16,
+       col=fac_list[[4]][[4]])
+#again, not much of a pattern...lotic = 1 tends to be in the interior of lotic = 0
+
+
+
+
+
 
 #### NMDS===========================================================================================
 ### Choose number of dimensions
@@ -97,21 +169,57 @@ smacof::Procrustes(Y=bmi_explore$mdsfit[[75]]$conf,
                    X=bmi_nmds_default$conf)
 #congruence coefficient (R value) = 1
 #alienation coefficient (1-R^2) = .02
-#thus, solutions are nearly identical
+#thus, solutions are nearly identical...will go with default
+
+
+
+### Determine sensitivity of solution to each site value using jackknife (i.e., how different is
+  #the final configuration if we leave out each site in turn?)
+bmi_jack<-jackmds(bmi_nmds_default)
+#stability measure = 0.9966
+#cross validity = 0.9999
+#both close to 1 --> results do not differ to within rounding error between jackknifed runs
+plot(bmi_jack,main="Jackknife plot of bmi data",col.p="black",col.l="red")
+#only two sites (1, 14) show significant change when jackknifing
+
+#*these results indicate that the NMDS solution obtained when using the site scores on the first
+  #two PCoA axes as starting values is close to or at the best NMDS solution, which is highly
+  #stable
+
+### Shepard diagram
+#look at Shepard diagram to see how Bray-Curtis dissimilarities have been converted into Euclidean
+  #distances in our 2-dim NMDS ordination
+plot(bmi_nmds_default,plot.type="Shepard",xlab="Bray-Curtis dissimilarities",
+     ylab="Euclidean distances (NMDS)",pch=16,main="Shepard diagram NMDS of bmi data")
+#pattern: roughly a linear relationship from origin until ~0.7 B-C dissim then ~ exponential
+#interpretation: pairs of sites with similar genera composition (small B-C dissim) are placed
+  #closer together in the NMDS solution while pairs of sites with more dissimilar genera
+  #compositions are placed further apart in their NMDS solutions
+
+
+#### Plot environmental variables in NMDS space
+#use envfit() and ord.on.env.arrows()
 
 
 
 
 
+# NEXT
+# make NMDS plot
+# add env vars
+
+
+
+# DONE
 
 
 
 
-
-
-
-
-
+# LAST COMMIT
+# first plot of PCoA
+# sensitivity and jacknifing of bmi data
+# Shepard's diagram of bmi data
+# finished PCoA plots with points colored by factors
 
 
 
