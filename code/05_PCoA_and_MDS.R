@@ -2,8 +2,10 @@
 #Principal Coordinates and Multidimensional Scaling
 
 
-#### Source DF (and load packages)=================================================================
-pacman::p_load(here,tidyverse,viridis,vegan,smacof)
+#### Source DF & functions (and load packages)======================================================
+pacman::p_load(here,tidyverse,viridis,vegan,smacof,cowplot)
+
+source(here("code","DCA_Env_Arrows_function.R"))
 
 select<-dplyr::select
 filter<-dplyr::filter
@@ -55,7 +57,7 @@ bmi_pcoa<-wcmdscale(bmi_bray,k=2,eig=TRUE)
 
 
 ## Percent of total inertia captured by (k=) 2 axes
-bmi_pcoa$GOF
+bmi_pcoa$GOF[1]
 
 # Percent inertia captured by first and second axes
 100*bmi_pcoa$eig[1:2]/sum(bmi_pcoa$eig)
@@ -116,7 +118,7 @@ legend("bottomright",
        legend=fac_list[[3]][[3]],
        pch=16,
        col=fac_list[[3]][[4]])
-#not much of a pattern--fish tend to cluster at ~PCoA1 from -0.2 to 0.2 and PCoA2 ~ 0.25 but there
+#not much of a pattern--fish tend to cluster at PCoA1 from ~ -0.2 to 0.2 and PCoA2 ~ 0.25 but there
   #are 3 'stray' points
 
 #lotic
@@ -198,14 +200,106 @@ plot(bmi_nmds_default,plot.type="Shepard",xlab="Bray-Curtis dissimilarities",
 
 
 #### Plot environmental variables in NMDS space
-#use envfit() and ord.on.env.arrows()
+## Combine NMDS points with env data
+bmi_nmds_envDF<-bmi_nmds_default$conf %>%
+  bind_cols(
+    bmi_envDF %>%
+      select(local_site,location,fish_presence:oxygen)
+  )
+
+
+## Construct plots (using ggplot2)
+# As grid
+factor_vec %>%
+  map(function(fac){
+    bmi_nmds_envDF %>%
+      ggplot() +
+      ggtitle(sym(fac)) +
+      geom_point(aes(x=D1,y=D2,color=!!sym(fac)),size=2) +
+      scale_color_viridis_d(end=0.8) +
+      labs(x="NMDS axis 1",
+           y="NMDS axis2") +
+      theme_bw() +
+      theme(legend.position="bottom") +
+      guides(color=guide_legend(title.position="top",
+                                title.hjust=0.5,
+                                nrow=ifelse(n_distinct(bmi_nmds_envDF[fac])>2,
+                                            2,
+                                            1)))
+  }) %>%
+  set_names(factor_vec) %>% 
+  plot_grid(plotlist=.)
+
+
+# Overlay (numerical) env vars for NMDS plots that show "clustering"
+#fish_presence
+#predict env var given site scores on ordination axes
+ef<-envfit(env=bmi_nmds_envDF,ord=bmi_nmds_default$conf) 
+
+ef_vars<-as.data.frame(ef$vectors$arrows*sqrt(ef$vectors$r)) %>%
+  rownames_to_column(var="variable") %>%
+  filter(!variable %in% c("D1","D2")) %>%
+  as_tibble()
+
+bmi_nmds_envDF %>%
+  ggplot() +
+  ggtitle("fish_presence") +
+  geom_point(aes(x=D1,y=D2,color=fish_presence),size=2) +
+  geom_segment(data=ef_vars,aes(x=0,xend=D1,y=0,yend=D2),
+               arrow=arrow(ends="last",type="closed",length=unit(0.05,"inches")),
+               color="red") +
+  geom_text(data=ef_vars,aes(x=D1,y=D2,label=variable),
+            nudge_x=0.05,
+            nudge_y=0.05,
+            color="red") +
+  scale_color_viridis_d(end=0.8) +
+  labs(x="NMDS axis 1",
+       y="NMDS axis2") +
+  theme_bw() +
+  theme(legend.position="bottom")
+
+#interpretation:
+#as NMDS1 values increase, so do pH, elevation, and to a lesser extent, oxygen and nitrate, while
+  #temp decreases
+#as NMDS2 values increase, so do pH, temp, and to a lesser degree, elevation and oxygen, while 
+  #nitrate decreases
+#note: only elevation and pH are significant per envfit() output
+#site scores where fish are present (in upper left) are positively associated with temperature &
+  #negatively associated with nitrate
+
+#predict site scores given env var
+ord.on.env.arrows(ordination.site.scores=bmi_nmds_default$conf,
+                  env.matrix=bmi_nmds_envDF %>% select(elevation_trans:last_col()))
+
+
+#lotic
+#predict env var given site scores on ordination axes
+bmi_nmds_envDF %>%
+  ggplot() +
+  ggtitle("lotic") +
+  geom_point(aes(x=D1,y=D2,color=lotic),size=2) +
+  geom_segment(data=ef_vars,aes(x=0,xend=D1,y=0,yend=D2),
+               arrow=arrow(ends="last",type="closed",length=unit(0.05,"inches")),
+               color="red") +
+  geom_text(data=ef_vars,aes(x=D1,y=D2,label=variable),
+            nudge_x=0.05,
+            nudge_y=0.05,
+            color="red") +
+  scale_color_viridis_d(end=0.8) +
+  labs(x="NMDS axis 1",
+       y="NMDS axis2") +
+  theme_bw() +
+  theme(legend.position="bottom")
+  
+#interpretation:
+#same for env vectors
+
 
 
 
 
 
 # NEXT
-# make NMDS plot
 # add env vars
 
 
@@ -214,12 +308,9 @@ plot(bmi_nmds_default,plot.type="Shepard",xlab="Bray-Curtis dissimilarities",
 
 
 
-
 # LAST COMMIT
-# first plot of PCoA
-# sensitivity and jacknifing of bmi data
-# Shepard's diagram of bmi data
-# finished PCoA plots with points colored by factors
+# made NMDS plots with factor variables colored by category
+# added efs to plots
 
 
 
