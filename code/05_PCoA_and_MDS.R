@@ -2,7 +2,7 @@
 #Principal Coordinates and Multidimensional Scaling
 
 
-#### Source DF & functions (and load packages)======================================================
+##### Source DF & functions (and load packages)=====================================================
 pacman::p_load(here,tidyverse,viridis,vegan,smacof,cowplot)
 
 source(here("code","DCA_Env_Arrows_function.R"))
@@ -21,57 +21,57 @@ bmiDF <- bmi_envDF %>%
   
 
 
-#### Compute distances==============================================================================
-### Manhattan
+##### Compute distances=============================================================================
+#### Manhattan
 vegdist(bmiDF[,-1],method="manhattan",diag=TRUE)
 
-### Euclidean
+#### Euclidean
 vegdist(bmiDF[,-1],method="euclidean",diag=TRUE)
 
-### Chord
+#### Chord
 #transform (normalize) data before calculating Euclidean distances to calculate chord distances
 vegdist(decostand(bmiDF[,-1],"norm"),method="euclidean",diag=TRUE)
 
-### Species profiles
+#### Species profiles
 vegdist(decostand(bmiDF[,-1],"total"),method="euclidean",diag=TRUE)
 
-### Hellinger
+#### Hellinger
 vegdist(decostand(bmiDF[,-1],"hellinger"),method="euclidean",diag=TRUE)
 
-### Chi-squared
+#### Chi-squared
 vegdist(decostand(bmiDF[,-1],"chi.square"),method="euclidean",diag=TRUE)
 
-### Bray-Curtis
+#### Bray-Curtis
 vegdist(bmiDF[,-1],method="bray",diag=TRUE)
 
 
-#### PCoA===========================================================================================
-### Create dissimilarity matrix
+##### PCoA==========================================================================================
+#### Create dissimilarity matrix
 #using square-roots of B-C distances because non-metric & can produce negative EVs
 bmi_bray<-sqrt(vegdist(bmiDF[,-1],method="bray"))
 
 
-### Fit PCoA
-## Using a weighted PCoA
+#### Fit PCoA
+### Using a weighted PCoA
 bmi_pcoa<-wcmdscale(bmi_bray,k=2,eig=TRUE)
 
 
-## Percent of total inertia captured by (k=) 2 axes
+### Percent of total inertia captured by (k=) 2 axes
 bmi_pcoa$GOF[1]
 
-# Percent inertia captured by first and second axes
+## Percent inertia captured by first and second axes
 100*bmi_pcoa$eig[1:2]/sum(bmi_pcoa$eig)
 
 
-### Plot PCoA
-## Combine PCoA points with env data
+#### Plot PCoA
+### Combine PCoA points with env data
 bmi_pcoa_envDF<-bmi_pcoa$points %>%
   bind_cols(
     bmi_envDF %>%
       select(local_site,location,fish_presence:oxygen)
   )
 
-## Create list of inputs for plots
+### Create list of inputs for plots
 factor_vec<-c("local_site","location","fish_presence","lotic","shore")
 
 factor_vec %>%
@@ -88,7 +88,7 @@ factor_vec %>%
   }) -> fac_list
 
 
-## Construct plots
+### Construct plots
 par(mfrow=c(1,1))
 #local_site
 plot(bmi_pcoa,xlab="PCoA axis 1",ylab="PCoA axis 2",type="n")
@@ -136,8 +136,8 @@ legend("bottomright",
 
 
 
-#### NMDS===========================================================================================
-### Choose number of dimensions
+##### NMDS==========================================================================================
+#### Choose number of dimensions
 #fit a series of NMDS models on site scores of the first two PCoA axes while successively increasing
   #the number of dimensions
 #look at how stress values decrease as number of dimensions (axes) increases using a scree plot
@@ -154,7 +154,7 @@ bmi_nmds_stress[2]
 #stress = 0.08069043
 
 
-### Iteratively find lowest stress value
+#### Iteratively find lowest stress value
 bmi_nmds_default<-smacof::mds(bmi_bray,ndim=2,type="ordinal",ties="primary")
 bmi_explore<-smacof::icExplore(bmi_bray,ndim=2,type="ordinal",ties="primary",returnfit=TRUE,
                                verbose=TRUE)
@@ -166,7 +166,7 @@ bmi_explore$stressvec[75]
 #this value (.08067371) is nearly identical to the default NMDS solution
 
 
-### Compare default and run #75 solutions using Procrustes analysis
+#### Compare default and run #75 solutions using Procrustes analysis
 smacof::Procrustes(Y=bmi_explore$mdsfit[[75]]$conf,
                    X=bmi_nmds_default$conf)
 #congruence coefficient (R value) = 1
@@ -175,7 +175,7 @@ smacof::Procrustes(Y=bmi_explore$mdsfit[[75]]$conf,
 
 
 
-### Determine sensitivity of solution to each site value using jackknife (i.e., how different is
+#### Determine sensitivity of solution to each site value using jackknife (i.e., how different is
   #the final configuration if we leave out each site in turn?)
 bmi_jack<-jackmds(bmi_nmds_default)
 #stability measure = 0.9966
@@ -188,7 +188,7 @@ plot(bmi_jack,main="Jackknife plot of bmi data",col.p="black",col.l="red")
   #two PCoA axes as starting values is close to or at the best NMDS solution, which is highly
   #stable
 
-### Shepard diagram
+#### Shepard diagram
 #look at Shepard diagram to see how Bray-Curtis dissimilarities have been converted into Euclidean
   #distances in our 2-dim NMDS ordination
 plot(bmi_nmds_default,plot.type="Shepard",xlab="Bray-Curtis dissimilarities",
@@ -199,8 +199,8 @@ plot(bmi_nmds_default,plot.type="Shepard",xlab="Bray-Curtis dissimilarities",
   #compositions are placed further apart in their NMDS solutions
 
 
-#### Plot environmental variables in NMDS space
-## Combine NMDS points with env data
+##### Plot environmental variables in NMDS space
+### Combine NMDS points with env data
 bmi_nmds_envDF<-bmi_nmds_default$conf %>%
   bind_cols(
     bmi_envDF %>%
@@ -208,8 +208,8 @@ bmi_nmds_envDF<-bmi_nmds_default$conf %>%
   )
 
 
-## Construct plots (using ggplot2)
-# As grid
+### Construct plots (using ggplot2)
+## As grid
 factor_vec %>%
   map(function(fac){
     bmi_nmds_envDF %>%
@@ -231,8 +231,8 @@ factor_vec %>%
   plot_grid(plotlist=.)
 
 
-# Overlay (numerical) env vars for NMDS plots that show "clustering"
-#fish_presence
+## Overlay (numerical) env vars for NMDS plots that show "clustering"
+# fish_presence
 #predict env var given site scores on ordination axes
 ef<-envfit(env=bmi_nmds_envDF,ord=bmi_nmds_default$conf) 
 
@@ -241,7 +241,7 @@ ef_vars<-as.data.frame(ef$vectors$arrows*sqrt(ef$vectors$r)) %>%
   filter(!variable %in% c("D1","D2")) %>%
   as_tibble()
 
-bmi_nmds_envDF %>%
+fp_env_p<-bmi_nmds_envDF %>%
   ggplot() +
   ggtitle("fish_presence") +
   geom_point(aes(x=D1,y=D2,color=fish_presence),size=2) +
@@ -254,9 +254,12 @@ bmi_nmds_envDF %>%
             color="red") +
   scale_color_viridis_d(end=0.8) +
   labs(x="NMDS axis 1",
-       y="NMDS axis2") +
+       y="NMDS axis2",
+       subtitle="env var~ord axes") +
   theme_bw() +
   theme(legend.position="bottom")
+
+fp_env_p
 
 #interpretation:
 #as NMDS1 values increase, so do pH, elevation, and to a lesser extent, oxygen and nitrate, while
@@ -267,14 +270,79 @@ bmi_nmds_envDF %>%
 #site scores where fish are present (in upper left) are positively associated with temperature &
   #negatively associated with nitrate
 
+
 #predict site scores given env var
+#base plotting
+plot(bmi_nmds_default)
 ord.on.env.arrows(ordination.site.scores=bmi_nmds_default$conf,
                   env.matrix=bmi_nmds_envDF %>% select(elevation_trans:last_col()))
 
+#ggplot
+ord_env<-ord.on.env.arrows(ordination.site.scores=bmi_nmds_default$conf,
+                  env.matrix=bmi_nmds_envDF %>% select(elevation_trans:last_col()))
 
-#lotic
+ord_vars<-list(ord_env$axis1$coefficients,ord_env$axis2$coefficients) %>%
+  set_names(c("D1","D2")) %>%
+  imap(function(x,y){
+    x %>%
+      as.data.frame() %>%
+      rownames_to_column() %>%
+      select(variable="rowname",Estimate) %>%
+      filter(variable!="(Intercept)") %>%
+      mutate(variable=str_remove(variable,"^scale\\(env.matrix\\)")) %>%
+      rename(!!sym(y):="Estimate")
+  }) %>%
+  reduce(inner_join)
+
+
+
+fp_ord_p<-bmi_nmds_envDF %>%
+  ggplot() +
+  ggtitle("fish_presence") +
+  geom_point(aes(x=D1,y=D2,color=fish_presence),size=2) +
+  geom_segment(data=ord_vars,aes(x=0,xend=D1,y=0,yend=D2),
+               arrow=arrow(ends="last",type="closed",length=unit(0.05,"inches")),
+               color="red") +
+  geom_text(data=ord_vars,aes(x=D1,y=D2,label=variable),
+            nudge_x=0.04,
+            nudge_y=0.04,
+            color="red") +
+  scale_color_viridis_d(end=0.8) +
+  labs(x="NMDS axis 1",
+       y="NMDS axis2",
+       subtitle="ord axis~env vars") +
+  theme_bw() +
+  theme(legend.position="bottom")
+
+fp_ord_p
+
+#interpretation: 
+#as NMDS1 values increase, so do elevation and oxygen, and to a lesser extent, pH and nitrate, while
+  #temp decreases
+#as NMDS2 values increase, so does temp and to a lesser extent elevation then pH, while oxygen and
+  #nitrate decrease
+#note: no env var predicts site scores significantly, and only oxygen-NMDS1 and nitrate-NMDS2 are
+  #marginally significant
+#site scores where fish are present (~ 0, 0.5) are positively associated with temp and negatively
+  #associated with nitrate
+
+
+#plot both
+plot_grid(fp_env_p,fp_ord_p)
+
+#interpretation of differences:
+#strengths of relationships differed between two types of regressions:
+  #temp & nitrate: grew from 1 to 2
+  #pH: decreased from 1 to 2
+#nature of relationship:
+  #elevation: more closely associated with NMDS1 from 1 to 2
+  #oxygen: no relationship (near origin) to more negatively associated with NMDS2
+
+
+
+# lotic
 #predict env var given site scores on ordination axes
-bmi_nmds_envDF %>%
+l_env_p<-bmi_nmds_envDF %>%
   ggplot() +
   ggtitle("lotic") +
   geom_point(aes(x=D1,y=D2,color=lotic),size=2) +
@@ -287,20 +355,65 @@ bmi_nmds_envDF %>%
             color="red") +
   scale_color_viridis_d(end=0.8) +
   labs(x="NMDS axis 1",
-       y="NMDS axis2") +
+       y="NMDS axis 2",
+       subtitle="env var~ord axes") +
   theme_bw() +
   theme(legend.position="bottom")
+
+l_env_p
   
 #interpretation:
-#same for env vectors
+#as NMDS1 values increase, so do pH and elevation and to a lesser extent oxygen and nitrate, while
+  #temp decreases
+#as NMDS2 values increase, so does pH and to a lesser extent temp, elevation, and oxygen, while
+  #nitrate decreases
+#note: only elevation and pH are significant per envfit() output
+#sites scores where lotic = 0 (lentic areas) and are ~ 0-0.5, 0 - -0.5 are positively associated
+  #with temp and negatively associated with nitrate
 
 
+#predict site scores given env var
+l_ord_p<-bmi_nmds_envDF %>%
+  ggplot() +
+  ggtitle("lotic") +
+  geom_point(aes(x=D1,y=D2,color=lotic),size=2) +
+  geom_segment(data=ord_vars,aes(x=0,xend=D1,y=0,yend=D2),
+               arrow=arrow(ends="last",type="closed",length=unit(0.05,"inches")),
+               color="red") +
+  geom_text(data=ord_vars,aes(x=D1,y=D2,label=variable),
+            nudge_x=0.04,
+            nudge_y=0.04,
+            color="red") +
+  scale_color_viridis_d(end=0.8) +
+  labs(x="NMDS axis 1",
+       y="NMDS axis 2",
+       subtitle="ord axis~env vars") +
+  theme_bw() +
+  theme(legend.position="bottom")
+
+l_ord_p
+
+#interpretation:
+#as NMDS1 values increase, so do elevation and pH, and to a lesser extent oxygen and nitrate, while
+  #temp decreases
+#as NMDS2 values increase, so does pH and to a lesser extent temp, elevation, and oxygen, while
+  #nitrate
+#note: no env var predicts site scores significantly, and only oxygen-NMDS1 and nitrate-NMDS2 are
+  #marginally significant
+#site scores where lotic = 0 (lentic areas) ~ 0-0.5, 0 - -0.5 are positively associated with
+  #temp and negatively associated with nitrate
+
+
+plot_grid(l_env_p,l_ord_p)
+
+#interpretation of differences:
+#same as fish_presence
 
 
 
 
 # NEXT
-# add env vars
+
 
 
 
@@ -309,8 +422,8 @@ bmi_nmds_envDF %>%
 
 
 # LAST COMMIT
-# made NMDS plots with factor variables colored by category
-# added efs to plots
+#added ord axis~env vars to fish_presence and lotic NMDS
+#created plot_grid()s using both type of env-ord fits
 
 
 
