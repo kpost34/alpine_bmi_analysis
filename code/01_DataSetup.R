@@ -5,6 +5,9 @@
 pacman::p_load(here,tidyverse,naniar)
 
 here<-here::here
+select<-dplyr::select
+summarize<-dplyr::summarize
+mutate<-dplyr::mutate
 
 
 #### Data Import====================================================================================
@@ -51,7 +54,7 @@ BMIn_inputDF %>%
 envVar_inputDF %>%
   #reclassify cols as factors
   mutate(across(c(location,location,fish_presence:lotic),as.factor),
-    across(elevation:nitrate,as.numeric)) %>%
+         across(elevation:nitrate,as.numeric)) %>%
   #count # of NAs per row
   #mutate(NA_tot=rowSums(is.na(.))) %>% 
   #keep samples without missing data
@@ -234,9 +237,9 @@ traitCountRe2DF %>%
 
 ## Change shape of data files
 # Env data
-BMIenvWideDF %>%
+BMIenvWideDF %>% 
   #make fish_presence and lotic numeric to enable pivot
-  mutate(across(fish_presence:lotic,as.numeric)) %>%
+  mutate(across(c(fish_presence,lotic),as.numeric)) %>% 
   pivot_longer(cols=c(elevation:lotic),names_to="variable",values_to="value") -> BMIenvTidyDF
 
 
