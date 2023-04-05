@@ -7,6 +7,7 @@ pacman::p_load(here,rstatix,MASS,GGally,vegan,ggfortify,ggbiplot)
 
 select<-dplyr::select
 filter<-dplyr::filter
+mutate<-dplyr::mutate
 
 source(here::here("code","01_DataSetup.R"))
 source(here::here("code","02a_EDA_functions.R"))
@@ -454,10 +455,7 @@ envPCA2_pr_anovaDF %>%
 
 
 ## LAST COMMIT
-#ran an ANOVA and t-tests on scores from distance-preserving biplots according to the three most
-  #discriminating factors/cat vars
-#ran omnibus tests and began to interpret results using test results, biplots, and loadings
-
+#resolved conflicts
 
 
 
