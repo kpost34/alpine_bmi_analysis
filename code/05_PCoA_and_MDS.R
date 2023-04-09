@@ -12,8 +12,9 @@ filter<-dplyr::filter
 
 
 #full data frame
-bmi_envDF<-readRDS(here::here("data","tidy_data",
-                                         "alpine_bmi_env_n_trans_compVar_noMiss_2023-03-13.rds"))
+bmi_envDF<-readRDS(here::here("data",
+                              "tidy_data",
+                              "alpine_bmi_env_n_trans_compVar_2023-04-09.rds"))
 
 #site identifier + tax data
 bmiDF <- bmi_envDF %>%
@@ -119,7 +120,7 @@ legend("bottomright",
        pch=16,
        col=fac_list[[3]][[4]])
 #not much of a pattern--fish tend to cluster at PCoA1 from ~ -0.2 to 0.2 and PCoA2 ~ 0.25 but there
-  #are 3 'stray' points
+  #are a couple 'stray' points
 
 #lotic
 plot(bmi_pcoa,xlab="PCoA axis 1",ylab="PCoA axis 2",type="n")
@@ -161,16 +162,16 @@ bmi_explore<-smacof::icExplore(bmi_bray,ndim=2,type="ordinal",ties="primary",ret
 bmi_explore
 plot(bmi_explore,main="icExplore BMI data")
 which(bmi_explore$stressvec==min(bmi_explore$stressvec))
-#75
-bmi_explore$stressvec[75]
-#this value (.08067371) is nearly identical to the default NMDS solution
+#36
+bmi_explore$stressvec[36]
+#this value (.08067672) is nearly identical to the default NMDS solution
 
 
-#### Compare default and run #75 solutions using Procrustes analysis
-smacof::Procrustes(Y=bmi_explore$mdsfit[[75]]$conf,
+#### Compare default and run #36 solutions using Procrustes analysis
+smacof::Procrustes(Y=bmi_explore$mdsfit[[36]]$conf,
                    X=bmi_nmds_default$conf)
 #congruence coefficient (R value) = 1
-#alienation coefficient (1-R^2) = .02
+#alienation coefficient (1-R^2) = .007
 #thus, solutions are nearly identical...will go with default
 
 
@@ -203,8 +204,8 @@ plot(bmi_nmds_default,plot.type="Shepard",xlab="Bray-Curtis dissimilarities",
 ### Combine NMDS points with env data
 bmi_nmds_envDF<-bmi_nmds_default$conf %>%
   bind_cols(
-    bmi_envDF %>%
-      select(local_site,location,fish_presence:oxygen)
+    bmi_envDF %>% 
+      select(local_site,location,fish_presence:elevTemp)
   )
 
 
@@ -234,7 +235,7 @@ factor_vec %>%
 ## Overlay (numerical) env vars for NMDS plots that show "clustering"
 # fish_presence
 #predict env var given site scores on ordination axes
-ef<-envfit(env=bmi_nmds_envDF,ord=bmi_nmds_default$conf) 
+ef<-envfit(env=bmi_nmds_envDF,ord=bmi_nmds_default$conf)
 
 ef_vars<-as.data.frame(ef$vectors$arrows*sqrt(ef$vectors$r)) %>%
   rownames_to_column(var="variable") %>%
@@ -262,12 +263,12 @@ fp_env_p<-bmi_nmds_envDF %>%
 fp_env_p
 
 #interpretation:
-#as NMDS1 values increase, so do pH, elevation, and to a lesser extent, oxygen and nitrate, while
-  #temp decreases
-#as NMDS2 values increase, so do pH, temp, and to a lesser degree, elevation and oxygen, while 
+#as NMDS1 values increase, so does pH and to a lesser extent, oxygen and nitrate, while
+  #elevTemp decreases
+#as NMDS2 values increase, so does pH and to a lesser degree, elevTemp and oxygen, while 
   #nitrate decreases
-#note: only elevation and pH are significant per envfit() output
-#site scores where fish are present (in upper left) are positively associated with temperature &
+#note: only pH is significant per envfit() output
+#site scores where fish are present (in upper left) are positively associated with elevTemp &
   #negatively associated with nitrate
 
 
@@ -279,7 +280,7 @@ ord.on.env.arrows(ordination.site.scores=bmi_nmds_default$conf,
 
 #ggplot
 ord_env<-ord.on.env.arrows(ordination.site.scores=bmi_nmds_default$conf,
-                  env.matrix=bmi_nmds_envDF %>% select(elevation_trans:last_col()))
+                  env.matrix=bmi_nmds_envDF %>% select(ph_trans:last_col()))
 
 ord_vars<-list(ord_env$axis1$coefficients,ord_env$axis2$coefficients) %>%
   set_names(c("D1","D2")) %>%
@@ -317,14 +318,13 @@ fp_ord_p<-bmi_nmds_envDF %>%
 fp_ord_p
 
 #interpretation: 
-#as NMDS1 values increase, so do elevation and oxygen, and to a lesser extent, pH and nitrate, while
-  #temp decreases
-#as NMDS2 values increase, so does temp and to a lesser extent elevation then pH, while oxygen and
-  #nitrate decrease
-#note: no env var predicts site scores significantly, and only oxygen-NMDS1 and nitrate-NMDS2 are
-  #marginally significant
-#site scores where fish are present (~ 0, 0.5) are positively associated with temp and negatively
-  #associated with nitrate
+#as NMDS1 values increase, so does oxygen, and to a lesser extent, pH and nitrate, while
+  #elevTemp decreases
+#as NMDS2 values increase, so does pH & elevTemp, while oxygen and nitrate decrease
+#note: for NMDS1, pH, oxygen, and elevTemp are significant; no env vars significantly related to
+  #NMDS2 but pH is marginally significant
+#site scores where fish are present (~ 0, 0.5) are positively associated with elevTemp and negatively
+  #associated with oxygen
 
 
 #plot both
@@ -332,12 +332,11 @@ plot_grid(fp_env_p,fp_ord_p)
 
 #interpretation of differences:
 #strengths of relationships differed between two types of regressions:
-  #temp & nitrate: grew from 1 to 2
+  #elevTemp: grew from 1 to 2
   #pH: decreased from 1 to 2
 #nature of relationship:
-  #elevation: more closely associated with NMDS1 from 1 to 2
-  #oxygen: no relationship (near origin) to more negatively associated with NMDS2
-
+  #oxygen: no relationship (near origin) to more negatively associated with NMDS1 & 2
+#no change: nitrate
 
 
 # lotic
@@ -363,13 +362,13 @@ l_env_p<-bmi_nmds_envDF %>%
 l_env_p
   
 #interpretation:
-#as NMDS1 values increase, so do pH and elevation and to a lesser extent oxygen and nitrate, while
-  #temp decreases
-#as NMDS2 values increase, so does pH and to a lesser extent temp, elevation, and oxygen, while
+#as NMDS1 values increase, so does pH and to a lesser extent oxygen and nitrate, while
+  #elevTemp decreases
+#as NMDS2 values increase, so does pH and to a lesser extent elevTemp and oxygen, while
   #nitrate decreases
-#note: only elevation and pH are significant per envfit() output
+#note: only pH is significant per envfit() output
 #sites scores where lotic = 0 (lentic areas) and are ~ 0-0.5, 0 - -0.5 are positively associated
-  #with temp and negatively associated with nitrate
+  #with elevTemp and negatively associated with nitrate
 
 
 #predict site scores given env var
@@ -394,14 +393,13 @@ l_ord_p<-bmi_nmds_envDF %>%
 l_ord_p
 
 #interpretation:
-#as NMDS1 values increase, so do elevation and pH, and to a lesser extent oxygen and nitrate, while
-  #temp decreases
-#as NMDS2 values increase, so does pH and to a lesser extent temp, elevation, and oxygen, while
-  #nitrate
-#note: no env var predicts site scores significantly, and only oxygen-NMDS1 and nitrate-NMDS2 are
-  #marginally significant
+#as NMDS1 values increase, so does oxygen, and to a lesser extent, pH and nitrate, while
+  #elevTemp decreases
+#as NMDS2 values increase, so does pH & elevTemp, while oxygen and nitrate decrease
+#note: for NMDS1, pH, oxygen, and elevTemp are significant; no env vars significantly related to
+  #NMDS2 but pH is marginally significant
 #site scores where lotic = 0 (lentic areas) ~ 0-0.5, 0 - -0.5 are positively associated with
-  #temp and negatively associated with nitrate
+  #elevTemp and negatively associated with nitrate
 
 
 plot_grid(l_env_p,l_ord_p)
@@ -421,9 +419,11 @@ plot_grid(l_env_p,l_ord_p)
 
 
 
+
 # LAST COMMIT
-#added ord axis~env vars to fish_presence and lotic NMDS
-#created plot_grid()s using both type of env-ord fits
+#updated file path of input DF
+#update parts of script to reflect elevTemp composite var
+#updated interpretation (in comments)
 
 
 
