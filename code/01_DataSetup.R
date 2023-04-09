@@ -232,7 +232,10 @@ traitCountRe2DF %>%
   mutate(count=sum(count)) %>% 
   ungroup() %>% 
   select(-genus) %>% 
-  distinct() -> BMIcountTidyDF
+  distinct() %>%
+  #remove taxa that are not present in dataset
+  filter(!(order=="Coleoptera" & family=="Dytiscidae"),
+        !(order=="Trichoptera" & family=="Leptoceridae")) -> BMIcountTidyDF
 
 
 ## Change shape of data files
