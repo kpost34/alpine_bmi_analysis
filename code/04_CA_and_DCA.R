@@ -11,26 +11,13 @@ mutate<-dplyr::mutate
 
 
 # source(here::here("code","01_DataSetup.R"))
-BMIenvWideDF_trans<-readRDS(here::here("data","tidy_data","alpine_bmi_env_trans_2023-02-12.rds"))
-BMIenvcountWideDF_trans0<-readRDS(here::here("data","tidy_data","alpine_bmi_env_n_trans_2023-02-12.rds"))
+BMIenvWideDF_trans<-readRDS(here::here("data","tidy_data","alpine_bmi_env_trans_2023-04-09.rds"))
+BMIenvcountWideDF_trans<-readRDS(here::here("data","tidy_data","alpine_bmi_env_n_trans_2023-04-09.rds"))
 
 source(here::here("code","DCA_Env_Arrows_function.R"))
 
 
 #### Correspondence Analysis========================================================================
-### Update DF by removing absent genera
-## Identify genera that are present
-dca_tax_nm<-BMIenvcountWideDF_trans0 %>%
-  select(starts_with("Amphi"):last_col()) %>%
-  summarize(across(everything(),sum)) %>%
-  select_if(~any(.>0)) %>%
-  names() 
-
-## Retain those genera
-BMIenvcountWideDF_trans<-BMIenvcountWideDF_trans0 %>% 
-  select(local_site:nitrate_trans,all_of(dca_tax_nm))
-  
-
 ### Start with site x species matrix with sites as rows, species (taxa) as cols, and cells as counts, 
   #biomass, etc
 BMIenvcountWideDF_trans %>% 
@@ -224,12 +211,12 @@ BMIenvWideDF_trans %>%
   ggpairs(lower=list(continuous="smooth"))
 
 #strong correlations: DO-sat (-.959), temp-elevation (-0.714), sat-temp (-0.599) and DO-temp (.553) 
-#only very strong correlation is the first pair: DO-sat,so PCA will be run on these
+#correlations above 0.7 occur with DO-sat & temp-elevation,so PCAs will be run on these pairs
 #note that it is a linear relationship
 
 
-# Run PCA on these three variables
-#pca
+# Run PCAs on these pairs of variables
+#sat-DO_trans
 BMIenvWideDF_trans %>%
   #select sites + env vars of interest
   select(project_site,sat,DO_trans) %>%
@@ -247,26 +234,44 @@ abline(h=mean(satDO_PCA_pr$sdev^2))
 #clearly only PCA1 matters (i.e., EV drops significantly from PCA1-2 and EV of PCA2 is below broken stick
   #and avg EV)
 
-#combine PCA1 scores with env vars and re-plot without multicollinearity
-satDO_PCA_pr[["x"]] %>%
-  as_tibble() %>%
-  select(oxygen="PC1") %>%
+
+#elevation_trans-temp_trans
+BMIenvWideDF_trans %>%
+  #select sites + env vars of interest
+  select(project_site,elevation_trans,temp_trans) %>%
+  #formula input using scaled and centered variables
+  prcomp(~elevation_trans + temp_trans,
+         data=.,scale.=TRUE,center=TRUE) -> elevTemp_PCA_pr
+
+elevTemp_PCA_pr
+summary(elevTemp_PCA_pr)
+
+screeplot(elevTemp_PCA_pr,bstick=TRUE,type="barplot",
+          main="PCA of alpine lakes environmental variables")
+abline(h=mean(elevTemp_PCA_pr$sdev^2))
+#similar to DO-sat, PCA1 clearly matters here: significant drop from PCA1 to 2 and EV of PCA2 is below
+  #broken stick and avg EV
+
+
+#combine PCA1 scores (of both PCAs) with env vars and re-plot without multicollinearity
+BMIenvcountWideDF_trans %>% 
+  select(-c(DO_trans,sat,elevation_trans,temp_trans)) %>%
   bind_cols(
-    BMIenvcountWideDF_trans %>% 
-      select(-c(DO_trans,sat)) 
+    as_tibble_col(satDO_PCA_pr[["x"]][,1],column_name="oxygen"),
+    as_tibble_col(elevTemp_PCA_pr[["x"]][,1],column_name="elevTemp")
   ) %>%
-  relocate(oxygen,.after="nitrate_trans") -> BMIenvcountWideDF_compvar
+  relocate(c(oxygen,elevTemp),.after="nitrate_trans") -> BMIenvcountWideDF_compvar
 
 
 ### Write new file
 # saveRDS(BMIenvcountWideDF_compvar,
-#         here("data","tidy_data",paste0("alpine_bmi_env_n_trans_compVar_noMiss_",Sys.Date(),".rds")))
+#         here("data","tidy_data",paste0("alpine_bmi_env_n_trans_compVar_",Sys.Date(),".rds")))
 
 #check multicollinearity
 BMIenvcountWideDF_compvar %>% 
-  select(elevation_trans:oxygen) %>%
+  select(ph_trans:elevTemp) %>%
   ggpairs(lower=list(continuous="smooth"))
-#now highest cor is -.714
+#now highest cor is 0.586
 
 
 # Re-plot correlations 
@@ -274,7 +279,7 @@ BMIenvcountWideDF_compvar %>%
 #DCA1 & 2
 BMIenvcountWideDF_compvar %>%
   #select env vars only
-  select(elevation_trans:oxygen) %>%
+  select(ph_trans:elevTemp) %>%
   envfit(ord=bmiDCA_dec,
          choices=1:3) -> BMIenvfit_compvar_numonly
 
@@ -298,13 +303,13 @@ points(bmiDCA_dec,display="species",pch=16,cex=0.5,col="red")
 plot(BMIenvfit_compvar_numonly,choices=c(2,3))
 
 
-#between each ordination axis and all env vars (with comp variable)
+#between each ordination axis and all env vars (with comp variables)
 plot(bmiDCA_dec,choices=c(1,2),type="n")
 text(bmiDCA_dec,display="sites",col="black",cex=0.5)
 points(bmiDCA_dec,display="species",pch=16,cex=0.5,col="red")
 ord.on.env.arrows(ordination.site.scores=bmiDCA_dec$rproj[,1:2],
                   env.matrix=BMIenvcountWideDF_compvar %>%
-                    select(elevation_trans:oxygen),
+                    select(ph_trans:elevTemp),
                   arrow.col="blue",arrow.scale=5,
                   choices=c(1,2))
 
@@ -323,7 +328,7 @@ text(bmiDCA_dec,display="sites",col="black",cex=0.5)
 points(bmiDCA_dec,display="species",pch=16,cex=0.5,col="red")
 ord.on.env.arrows(ordination.site.scores=bmiDCA_dec$rproj[,1:2],
                   env.matrix=BMIenvcountWideDF_compvar %>%
-                    select(elevation_trans:oxygen),
+                    select(ph_trans:elevTemp),
                   arrow.col="blue",arrow.scale=4,
                   choices=c(1,2))
 title("axis~environmental variables")
@@ -331,7 +336,7 @@ title("axis~environmental variables")
 #explanation:
 #left plot: each env var and all chosen ordination axes (i.e., how does the combination of ordination
   #axes predict each env var)
-  #show correlations between env vars and ord axes
+  #shows correlations between env vars and ord axes
 
 
 #right plot: each ordination axis and all env vars (i.e., how does the combination of env vars
@@ -342,16 +347,15 @@ title("axis~environmental variables")
 
 
 #interpretation:
-#left plot: the strongest organizing variables are elevation (~0 DCA1, + DCA2) and temp (~0 DCA1, 
-  #- DCA2); no env var is strongly + or -
-#right plot: greater separation of variables along DCA1 & 2
-  #sites with + DCA1 and 0 DCA2 associated with elevation, nitrate, and oxygen (sat & DO)
-  #sites with - DCA1 and moderate - DCA2 associated with temp
+#left plot: the strongest organizing variables are elevTemp (~0 DCA1, - DCA2) and ph_trans (+ DCA1, 
+  #+ DCA2)
+#right plot: greater separation of variables along DCA2
+  #sites with + DCA1 and 0 DCA2 associated with nitrate and oxygen (sat & DO)
+  #sites with - DCA1 and moderate - DCA2 associated with elevTemp
   #sites with ~0 DCA1 and + DCA2 = pH
 
 #given that axis ~ env vars is more in line with how DCA is viewed (ord axis represents a composite
   #of env vars) and that it takes into account other variables, it's preferred
-  #thus
 
 
 ### Plot DCA scores colored by factor variable (location, fish_presence, lotic, shore)
@@ -381,7 +385,7 @@ legend("bottomright",
        legend=fac_list[[1]][[3]],
        pch=16,
        col=fac_list[[1]][[4]])
-#no clear pattern...ALB sites generaly moderately negative for both DC axes
+#no clear pattern...ALB sites generally moderately negative for both DC axes
 
 
 # location
@@ -404,7 +408,7 @@ legend("bottomright",
        pch=16,
        col=fac_list[[3]][[4]])
 #no clear pattern
-#generally, 1 = close to origin but 1 = spread out
+#generally, 1 = close to origin but 0 = spread out
 
 
 # lotic
@@ -434,6 +438,7 @@ legend("bottomright",
 ## Species scores
 summary(bmiDCA_dec)
 bmiDCA_dec$cproj
+
 
 ## Plot species scores
 # Sort species by abundance
@@ -475,7 +480,10 @@ points(x=rare_bmiDCA_dec$DCA1,y=rare_bmiDCA_dec$DCA2,pch=16,cex=1.5,col="red")
 
 
 
-
 #### LAST COMMIT
-# colored 'species' scores on DCA biplot by generic abundance
+# renamed input DF & removed chunk where missing taxa are removed from input DF (as they were 
+  #filtered out in data setup script)
+# run PCAs on temp-elevation too
+
+
 
