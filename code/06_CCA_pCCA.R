@@ -17,13 +17,14 @@ bmi_nDF <- bmi_n_envDF %>%
   select(starts_with("Amphipoda"):last_col())
 
 ## With composite vars
-# Fll data frame 
+# Full data frame 
 bmi_n_envDF_comp<-readRDS(here::here("data","tidy_data",
                                      "alpine_bmi_env_n_trans_compVar_2023-04-09.rds"))
 
-# Taxa only
+# Taxa only (with shortened names)
 bmi_nDF_comp<-bmi_n_envDF %>%
-  select(starts_with("Amphipoda"):last_col())
+  select(starts_with("Amphipoda"):last_col()) %>%
+  rename_with(.cols=everything(),.fn=~paste0(str_sub(.x,1,2),"_",str_extract(.x,"(?<=_)[:alpha:]{1,5}")))
 
 
 ##### Canonical Correspondence Analysis (CCA)=======================================================
@@ -61,7 +62,7 @@ bmi_cca_comp
 ## Run permutational ANOVA on new model to ensure
 anova(bmi_cca_comp) #NS
 anova(bmi_cca_comp,by="axis")
-#no axis is significant
+#no axis is significant...but will finish out the analysis
 
 
 ## Interpret summary
@@ -89,18 +90,84 @@ summary(bmi_cca_comp)
 
 
 ## Plot result
-# Plot observed species scores (not predicted ones) by display arg
-plot(bmi_cca_comp,display="sp",xlim=c(-3,3),ylim=c(-3,3))
+# Fish presence
+#plot observed species scores (not predicted ones) by display arg
+plot(bmi_cca_comp,type="n",display="sp",xlim=c(-3,3),ylim=c(-3,3))
 
-#create vector containing five vegetation types and specifying each color
+#create vectors of fish_presence var and fish_presence colors and env fit object
 fp<-bmi_n_envDF[["fish_presence"]]
 fp_colors<-c("black","green")
+fit<-envfit(bmi_cca_comp~ph_trans+nitrate_trans+oxygen+elevTemp,data=bmi_n_envDF_comp)
 
 
 #plot site scores on first two contrained axes and add the legend
 points(summary(bmi_cca_comp)$sites[,2]~summary(bmi_cca_comp)$sites[,1],col=fp_colors[fp],pch=16)
-text(bmi_cca_comp,display="sp",scaling="species")
-#legend("topright",legend=unique.communities,col=veg.type.colors,pch=16)
+text(bmi_cca_comp,display="sp",scaling="species",offset=0,cex=0.8)
+plot(fit)
+legend("topright",title="fish presence",legend=levels(fp),col=fp_colors,pch=16)
+
+
+# Lotic
+plot(bmi_cca_comp,type="n",display="sp",xlim=c(-3,3),ylim=c(-3,3))
+
+#create vectors of lotic var and lotic colors and env fit object
+lotic<-bmi_n_envDF[["lotic"]]
+lotic_colors<-c("black","green")
+fit<-envfit(bmi_cca_comp~ph_trans+nitrate_trans+oxygen+elevTemp,data=bmi_n_envDF_comp)
+
+
+#plot site scores on first two contrained axes and add the legend
+points(summary(bmi_cca_comp)$sites[,2]~summary(bmi_cca_comp)$sites[,1],col=lotic_colors[lotic],pch=16)
+text(bmi_cca_comp,display="sp",scaling="species",offset=0,cex=0.8)
+plot(fit)
+legend("topright",title="lotic",legend=levels(fp),col=lotic_colors,pch=16)
+
+
+#Interpretation
+#a perpendicular line from a site/point to an arrow indicates the env value at that site
+#a perpendicular line from a species/name to an arrow indicates env value in those sites in which
+  #that species reaches max abundance
+#lentic sites positively associated with oxygen (DO & sat) and negatively associated with nitrate
+#lotic sites negatively associated with pH
+#no clear pattern for taxa
+
+
+
+
+##### Partial Canonical Correspondence Analysis (pCCA)===============================================
+### Given reasonable separation of points by lentic/lotic, this variable is used to remove overall
+  #data trend in ordination space (by using it as a conditioning variable)
+
+### Conduct a CCA using lotic as a conditioning variable
+bmi_cca_comp_lotic<-cca(bmi_nDF_comp~ph_trans+nitrate_trans+oxygen+elevTemp+Condition(lotic),
+                        data=bmi_n_envDF_comp)
+anova(bmi_cca_comp_lotic,by="axis")
+#not significant: no effect of env vars after removing effect of lotic factor
+
+
+### Look at ordination object
+bmi_cca_comp_lotic
+
+
+### Plot results
+plot(bmi_cca_comp_lotic,type="n",display="sp",xlim=c(-3,3),ylim=c(-3,3))
+
+#create vectors of lotic var and lotic colors and env fit object
+lotic<-bmi_n_envDF[["lotic"]]
+lotic_colors<-c("black","green")
+fit<-envfit(bmi_cca_comp_lotic~ph_trans+nitrate_trans+oxygen+elevTemp,data=bmi_n_envDF_comp)
+
+
+#plot site scores on first two contrained axes and add the legend
+points(summary(bmi_cca_comp_lotic)$sites[,2]~summary(bmi_cca_comp_lotic)$sites[,1],col=lotic_colors[lotic],pch=16)
+text(bmi_cca_comp_lotic,display="sp",scaling="species",offset=0,cex=0.8)
+plot(fit)
+legend("topright",title="lotic",legend=levels(fp),col=lotic_colors,pch=16)
+
+#interpretation
+#colors slightly more mixed...but have definitely shifted around
+#conditional variance explains ~11% of total variance, whereas constrained explains ~24% (from ~21% before)
+#seems as though the lotic factor pulls more variance from unconstrained portion, preventing mixing of colors
 
 
 
