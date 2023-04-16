@@ -4,13 +4,13 @@
 
 #### Bar plots======================================================================================
 ### Total counts
-barplotter_tot<-function(dat,ind,dep,angled=FALSE){
+barplotter_tot<-function(dat,ind,dep,angled=FALSE,col){
   dat %>%
     group_by({{ind}}) %>%
     summarize({{dep}} := sum({{dep}})) %>% 
     mutate({{ind}} := fct_reorder({{ind}},{{dep}},.fun=sum,.desc=TRUE)) %>%
     ggplot(aes(x={{ind}},y={{dep}})) +
-    geom_col(color="black",fill="steelblue") +
+    geom_col(color="black",fill=col) +
     labs(x=str_to_title(quo_name(enquo(ind))),
          y=paste("Total",quo_name(enquo(dep)))) +
     scale_y_continuous(expand=expansion(mult=c(0,0.1))) +
@@ -26,7 +26,7 @@ barplotter_tot<-function(dat,ind,dep,angled=FALSE){
 
 ### Mean counts
 ## One ind
-barplotter_avg<-function(dat,ind,dep,angled=FALSE){
+barplotter_avg<-function(dat,ind,dep,angled=FALSE,col){
   dat %>%
     group_by({{ind}}) %>%
     summarize(mean_y := mean({{dep}}),
@@ -35,7 +35,7 @@ barplotter_avg<-function(dat,ind,dep,angled=FALSE){
               upper=mean_y+se) %>% 
     mutate("{{ind}}" := fct_reorder({{ind}},mean_y,.fun=sum,.desc=TRUE)) %>%
     ggplot(aes(x={{ind}},y=mean_y)) +
-    geom_col(color="black",fill="steelblue") +
+    geom_col(color="black",fill=col) +
     geom_errorbar(aes(ymin=lower,ymax=upper),width=0.4) +
     labs(x=str_to_title(quo_name(enquo(ind))),
          y=paste("Mean",quo_name(enquo(dep)))) +
