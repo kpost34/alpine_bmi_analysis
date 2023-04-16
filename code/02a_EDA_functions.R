@@ -12,7 +12,7 @@ barplotter_tot<-function(dat,ind,dep,angled=FALSE){
     ggplot(aes(x={{ind}},y={{dep}})) +
     geom_col(color="black",fill="steelblue") +
     labs(x=str_to_title(quo_name(enquo(ind))),
-         y=paste("Mean",quo_name(enquo(dep)))) +
+         y=paste("Total",quo_name(enquo(dep)))) +
     scale_y_continuous(expand=expansion(mult=c(0,0.1))) +
     theme_bw() -> p
   
