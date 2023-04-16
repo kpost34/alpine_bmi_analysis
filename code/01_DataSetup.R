@@ -242,7 +242,7 @@ traitCountRe2DF %>%
 # Env data
 BMIenvWideDF %>% 
   #make fish_presence and lotic numeric to enable pivot
-  mutate(across(c(fish_presence,lotic),as.numeric)) %>% 
+  mutate(across(c(fish_presence,lotic),~as.character(.x) %>% as.numeric)) %>% 
   pivot_longer(cols=c(elevation:lotic),names_to="variable",values_to="value") -> BMIenvTidyDF
 
 
