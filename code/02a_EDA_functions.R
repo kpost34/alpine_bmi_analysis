@@ -4,7 +4,7 @@
 
 #### Bar plots======================================================================================
 ### Total counts
-barplotter_tot<-function(dat,ind,dep,angled=FALSE,col){
+barplotter_tot<-function(dat,ind,dep,angled=FALSE,col="steelblue"){
   dat %>%
     group_by({{ind}}) %>%
     summarize({{dep}} := sum({{dep}})) %>% 
@@ -26,7 +26,7 @@ barplotter_tot<-function(dat,ind,dep,angled=FALSE,col){
 
 ### Mean counts
 ## One ind
-barplotter_avg<-function(dat,ind,dep,angled=FALSE,col){
+barplotter_avg<-function(dat,ind,dep,angled=FALSE,col="steelblue"){
   dat %>%
     group_by({{ind}}) %>%
     summarize(mean_y := mean({{dep}}),
