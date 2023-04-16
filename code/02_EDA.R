@@ -22,7 +22,7 @@ source(here::here("code","02a_EDA_functions.R"))
 #### Taxonomic data---------------------------------------------------------------------------------
 ### Location----------------------------------------------------------------------------------------
 ## Total counts
-barplotter_tot(BMIcountTidyDF,location,count)
+n_loc_bar<-barplotter_tot(BMIcountTidyDF,location,count,col="darkred")
 
 ## Average counts
 # Bar plot
@@ -35,7 +35,7 @@ boxplotter(BMIcountTidyDF,location,count)
 
 ### local_site--------------------------------------------------------------------------------------
 ## Total counts
-barplotter_tot(BMIcountTidyDF,local_site,count)
+n_site_bar<-barplotter_tot(BMIcountTidyDF,local_site,count,col="steelblue")
 
 ## Average counts
 # Bar plot
@@ -49,7 +49,7 @@ boxplotter(BMIcountTidyDF,local_site,count)
 
 ### Order-------------------------------------------------------------------------------------------
 ## Total counts
-barplotter_tot(BMIcountTidyDF,order,count,angled=TRUE)
+n_ord_bar<-barplotter_tot(BMIcountTidyDF,order,count,angled=TRUE,col="darkgreen")
 
 ## Average counts
 barplotter_avg(BMIcountTidyDF,order,count,angled=TRUE)
@@ -67,7 +67,7 @@ barplotter_avg(BMIcountTidyDF,family,count,angled=TRUE)
 ### Order-Location----------------------------------------------------------------------------------
 ## Average counts
 # Stacked
-barplotter_avg2(BMIcountTidyDF,order,location,count,angled=TRUE)
+n_loc_ord_bar_stack<-barplotter_avg2(BMIcountTidyDF,order,location,count,angled=TRUE)
 
 # Grouped
 barplotter_avg2(BMIcountTidyDF,order,location,count,pos="dodge",angled=TRUE)
@@ -83,15 +83,16 @@ barplotter_avg2(BMIcountTidyDF,order,local_site,count,pos="dodge",angled=TRUE)
 
 
 #### Environmental data-----------------------------------------------------------------------------
-### Faceted barplot of quantitative variables
-## By location
-bar_faceter(BMIenvTidyDF,location,variable,value,angled=TRUE) 
+### Faceted barplot of quantitative variables--faceted by variable
+## X-axis by location
+mean_env_loc_bar_facet<-bar_faceter(BMIenvTidyDF,location,variable,value,angled=TRUE)
 
 ## By local_site
-bar_faceter(BMIenvTidyDF,local_site,variable,value,angled=TRUE) 
+mean_env_loc_bar_facet<-bar_faceter(BMIenvTidyDF,local_site,variable,value,angled=TRUE) 
 
 ## By shore
 bar_faceter(BMIenvTidyDF,shore,variable,value,angled=TRUE) 
+
 
 
 ### Shore
@@ -137,7 +138,7 @@ BMIenvWideDF %>%
   theme_bw()
 
 # Full dataset (with smoother)
-BMIenvWideDF %>% 
+env_scatter_smooth<-BMIenvWideDF %>% 
   select(elevation:nitrate) %>%
   ggpairs(lower=list(continuous=wrap(smoother))) +
   theme_bw()
@@ -164,7 +165,7 @@ BMIenvWideDF %>%
   theme_bw()
 
 # Full dataset (with smoother)
-BMIenvWideDF %>% 
+env_byLotic_scatter_smooth<-BMIenvWideDF %>% 
   select(elevation:nitrate,lotic) %>%
   ggpairs(columns=1:6,aes(color=as.factor(lotic)),lower=list(continuous=wrap(smoother))) +
   theme_bw()
@@ -198,7 +199,7 @@ BMIenvWideDF %>%
 
 
 ### Heat maps (full dataset)
-BMIenvWideDF %>% 
+cor_env_heatmap<-BMIenvWideDF %>% 
   select(elevation:nitrate) %>%
   ggcorr() +
   # ggcorr(low = "#F21A00",
@@ -206,6 +207,40 @@ BMIenvWideDF %>%
   #        high = "#3B9AB2") +
   #scale_fill_distiller(palette ="RdBu", direction = 1) +
   theme_bw()
+
+
+
+#### Environmental and Taxonomic Data---------------------------------------------------------------
+### Data wrangling
+## 
+BMIenvcountWideDF %>%
+  rowwise() %>%
+  mutate(count=sum(c_across(cols=starts_with("Amph"):last_col())),
+         .keep="unused") -> BMIenvtotWideDF
+
+### Mean counts by categorical env vars
+## fish_presence
+barplotter_avg(BMIenvtotWideDF,fish_presence,count,col="darkred")
+
+## lotic
+barplotter_avg(BMIenvtotWideDF,lotic,count)
+
+## shore
+barplotter_avg(BMIenvtotWideDF,shore,count,col="darkgreen")
+
+
+### BMI Counts by Continuous Variable
+BMIenvtotWideDF %>%
+  
+
+
+
+
+
+
+
+
+
 
 
 

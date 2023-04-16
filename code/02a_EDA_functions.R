@@ -26,7 +26,7 @@ barplotter_tot<-function(dat,ind,dep,angled=FALSE,col="steelblue"){
 
 ### Mean counts
 ## One ind
-barplotter_avg<-function(dat,ind,dep,angled=FALSE,col="steelblue"){
+barplotter_avg<-function(dat,ind,dep,ebar=FALSE,angled=FALSE,col="steelblue"){
   dat %>%
     group_by({{ind}}) %>%
     summarize(mean_y := mean({{dep}}),
@@ -36,12 +36,19 @@ barplotter_avg<-function(dat,ind,dep,angled=FALSE,col="steelblue"){
     mutate("{{ind}}" := fct_reorder({{ind}},mean_y,.fun=sum,.desc=TRUE)) %>%
     ggplot(aes(x={{ind}},y=mean_y)) +
     geom_col(color="black",fill=col) +
-    geom_errorbar(aes(ymin=lower,ymax=upper),width=0.4) +
     labs(x=str_to_title(quo_name(enquo(ind))),
          y=paste("Mean",quo_name(enquo(dep)))) +
     scale_y_continuous(expand=expansion(mult=c(0,0.1))) +
-    theme_bw() -> p
+    theme_bw() -> p0
   
+  if(ebar==TRUE) {
+    p0 + 
+      geom_errorbar(aes(ymin=lower,ymax=upper),width=0.4) -> p
+  }
+  else if(ebar==FALSE){
+    p0 -> p
+  }
+    
   if(angled==TRUE) {
     p + theme(axis.text.x=element_text(angle=45,vjust=0.5,hjust=0.5))
   }
