@@ -45,3 +45,19 @@ qqplotter<-function(dat,var,meas,cols=NULL){
 
 
 
+#### ANOVA==========================================================================================
+### Run omnibus test
+run_omnibus_anova<-function(data,group){
+  envPCA2_pr_anovaDF %>%
+    select(site,{{group}},PC,scores) %>%
+    pivot_wider(id_cols=c(site,{{group}}),names_from="PC",values_from="scores")  %>%
+    select(-site) %>%
+    as.data.frame() %>%
+    Skalski.adonis(PC.axes=c(2,3),Groups=1) 
+}
+
+
+
+
+
+

@@ -5,16 +5,14 @@
 #### Source DFs (and load packages)=================================================================
 pacman::p_load(here,rstatix,MASS,GGally,vegan,ggfortify,ggbiplot,moments)
 
-select<-dplyr::select
-filter<-dplyr::filter
-mutate<-dplyr::mutate
-
 source(here::here("code","01_DataSetup.R"))
 source(here::here("code","02a_EDA_functions.R"))
 source(here::here("code","03a_PCA_functions.R"))
 source(here::here("code","Skalski_ANoD_function.R"))
 
-
+select<-dplyr::select
+filter<-dplyr::filter
+mutate<-dplyr::mutate
 
 
 
@@ -354,7 +352,7 @@ bmi_cat_vars %>%
   set_names() %>%
   map(function(g){
     ggbiplot(envPCA2_pr,scale=0,groups=BMIenvWideDF_trans[[g]],ellipse=TRUE) +
-      ggtitle(paste("Environmental variables grouped by",g)) +
+      ggtitle(paste("Grouped by",g)) +
       expand_limits(x=c(NA,2),
                     y=c(NA,2.5)) +
       geom_point(aes(color=BMIenvWideDF_trans[[g]])) +
@@ -362,6 +360,10 @@ bmi_cat_vars %>%
       scale_color_viridis_d(end=0.8) +
       theme_bw() 
   }) -> bmi_ggbiplot_list_ell
+
+#graph all in a single plot
+bmi_ggbiplot_list_ell[c(3,4,1)] %>%
+  plot_grid(plotlist=.,nrow=2,labels=c("A","B","C")) -> bmi_pca_biplot_groups
 
 
 ## ggplot with ggfortify (and shore as a categorical variable)
@@ -383,7 +385,7 @@ ggbiplot(envPCA2_pr,scale=1,labels=1:22) +
 #### Run ANOVAs (distance-preserving)---------------------------------------------------------------
 ### Wrangle data
 BMIenvWideDF_trans %>%
-  select(local_site,location,fish_presence,lotic) %>% 
+  select(local_site,location,fish_presence,lotic,shore) %>% 
   mutate(site=row_number() %>% as.character,.before="local_site") %>%
   left_join(
     envPCA2_pr$x %>%
@@ -397,12 +399,9 @@ BMIenvWideDF_trans %>%
 ### Run ANOVAs
 ## local_site
 # Omnibus test
-envPCA2_pr_anovaDF %>%
-  select(site,local_site,PC,scores) %>%
-  pivot_wider(id_cols=c("site","local_site"),names_from="PC",values_from="scores")  %>%
-  select(-site) %>%
-  as.data.frame() %>%
-  Skalski.adonis(PC.axes=c(2,3),Groups=1) #significantly different
+run_omnibus_anova(envPCA2_pr_anovaDF,local_site)
+#significantly different
+
 
 # By axis
 envPCA2_pr_anovaDF %>%
@@ -416,12 +415,7 @@ envPCA2_pr_anovaDF %>%
 
 ## location
 # Omnibus test
-envPCA2_pr_anovaDF %>%
-  select(site,location,PC,scores) %>%
-  pivot_wider(id_cols=c("site","location"),names_from="PC",values_from="scores")  %>%
-  select(-site) %>%
-  as.data.frame() %>%
-  Skalski.adonis(PC.axes=c(2,3),Groups=1) 
+run_omnibus_anova(envPCA2_pr_anovaDF,location)
 #NS
 
 
@@ -439,12 +433,7 @@ envPCA2_pr_anovaDF %>%
 
 ## fish_presence
 # Omnibus test
-envPCA2_pr_anovaDF %>%
-  select(site,fish_presence,PC,scores) %>%
-  pivot_wider(id_cols=c("site","fish_presence"),names_from="PC",values_from="scores")  %>%
-  select(-site) %>%
-  as.data.frame() %>%
-  Skalski.adonis(PC.axes=c(2,3),Groups=1) #significantly different
+run_omnibus_anova(envPCA2_pr_anovaDF,fish_presence) #significantly different
 
 # By axis
 envPCA2_pr_anovaDF %>%
@@ -462,12 +451,7 @@ envPCA2_pr_anovaDF %>%
 
 ## lotic
 # Omnibus test
-envPCA2_pr_anovaDF %>%
-  select(site,lotic,PC,scores) %>%
-  pivot_wider(id_cols=c("site","lotic"),names_from="PC",values_from="scores")  %>%
-  select(-site) %>%
-  as.data.frame() %>%
-  Skalski.adonis(PC.axes=c(2,3),Groups=1) #significant
+run_omnibus_anova(envPCA2_pr_anovaDF,lotic) #significant
 
 # By axis
 envPCA2_pr_anovaDF %>%
@@ -479,19 +463,14 @@ envPCA2_pr_anovaDF %>%
   #a shift along PC2), which is supported by omnibus and PC-separated ANOVAs
 
 
+## shore
+run_omnibus_anova(envPCA2_pr_anovaDF,shore) #NS
+
+envPCA2_pr_anovaDF %>%
+  group_by(PC) %>%
+  t_test(scores ~ shore,detailed=FALSE) #all NS
 
 
-
-
-
-
-
-
- #----------------------------------------------------------------------------------------------
-
-
-## LAST COMMIT
-#resolved conflicts
 
 
 
