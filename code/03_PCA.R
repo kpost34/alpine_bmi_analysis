@@ -3,7 +3,7 @@
 
 
 #### Source DFs (and load packages)=================================================================
-pacman::p_load(here,rstatix,MASS,GGally,vegan,ggfortify,ggbiplot)
+pacman::p_load(here,rstatix,MASS,GGally,vegan,ggfortify,ggbiplot,moments)
 
 select<-dplyr::select
 filter<-dplyr::filter
@@ -32,11 +32,15 @@ BMIenvTidyDF %>%
 ### Q-q plots
 BMIenvTidyDF %>% 
   filter(!variable %in% c("lotic","fish_presence")) %>%
-  qqplotter(variable,value)
+  qqplotter(variable,value) -> BMIenv_qqplot
+
+BMIenv_qqplot
 
 ### Shapiro tests
 BMIenvWideDF %>%
-  shapiro_test(elevation,temp,sat,DO,ph,nitrate)
+  shapiro_test(elevation,temp,sat,DO,ph,nitrate) -> BMIenv_shapiro
+
+BMIenv_shapiro
 #significant (non-normal): DO, nitrate, ph, and temp
 #normal: sat and elevation (barely)
 
@@ -73,12 +77,16 @@ BMIenvTidyDF_trans %>%
 ##Q-q plots
 BMIenvTidyDF_trans %>% 
   filter(!variable %in% c("fish_presence","lotic")) %>%
-  qqplotter(variable,value)
+  qqplotter(variable,value) -> BMIenv_qqplot_trans
+
+BMIenv_qqplot_trans
 
 
 # Shapiro tests
 BMIenvWideDF_trans %>%
-  shapiro_test(sat,elevation_trans,temp_trans,DO_trans,ph_trans,nitrate_trans)
+  shapiro_test(sat,elevation_trans,temp_trans,DO_trans,ph_trans,nitrate_trans) -> BMIenv_shapiro_trans
+
+BMIenv_shapiro_trans
 #significant (non-normal): nitrate_trans, ph_trans
 
 
@@ -115,28 +123,56 @@ BMIenvTidyDF_trans2 %>%
 BMIenvWideDF_trans2 %>%
   shapiro_test(nitrate_boxcox,nitrate_inverse,nitrate_log,nitrate_sqrt,
                ph_boxcox,ph_inverse,ph_log,ph_sqrt)
+
 #no transformation, whether BoxCox, log, sqrt, inverse, etc. was able to make these apparently
 #bimodal distributions normally distributed....so decided to use BoxCox transforms (or 
 #untransformed)
 
 
+## Test symmetry of Boxcox-transformed pH and nitrate
+# Measure skewness
+BMIenvWideDF_trans2 %>% 
+  select(ph="ph_boxcox",nitrate="nitrate_boxcox") %>%
+  skewness() -> ph_nitrate_boxcox_skewness
+
+ph_nitrate_boxcox_skewness
+
+# Statistically test it
+c("ph_boxcox","nitrate_boxcox") %>%
+  purrr::map_df(function(x){
+    BMIenvWideDF_trans2 %>%
+      pull(x) %>%
+      jarque.test() %>%
+      .[c("statistic","p.value")] %>%
+      as_tibble() %>%
+      mutate(var=str_remove(x,"_boxcox$"),.before=statistic)
+}) -> ph_nitrate_boxcox_jarque_test
+
+ph_nitrate_boxcox_jarque_test
+#neither is significant--have symmetrical distributions
+  
+
+
 
 #### Assumption 2: Any systematic relationships between variables are linear
+### Non-transformed
+BMIenvWideDF %>% 
+  select(elevation:nitrate) %>%
+  ggpairs(lower=list(continuous=wrap(smoother,method="loess"))) +
+  theme_bw()
+
 ### Transformed
 BMIenvWideDF_trans %>% 
   select(sat,ends_with("_trans")) %>%
   ggpairs(lower=list(continuous=wrap(smoother))) +
-  theme_bw()
+  theme_bw() -> boxcox_scatter
 
-### Non-transformed
-BMIenvWideDF %>% 
-  select(elevation:nitrate) %>%
-  ggpairs(lower=list(continuous=wrap(smoother))) +
-  theme_bw()
+boxcox_scatter
 #aside from a few pairs (e.g., sat-nitrate, elevation-nitrate, and DO-nitrate), there tends to be
   #linear relationships among pairs of variables
 #nitrate's apparent non-linear relationships with other variables and its clear bimodal distribution
   #will be kept in mind and could lead to a re-analysis of the data
+
 
 
 #### Save transformed data frames
