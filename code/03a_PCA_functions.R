@@ -47,13 +47,15 @@ qqplotter<-function(dat,var,meas,cols=NULL){
 
 #### ANOVA==========================================================================================
 ### Run omnibus test
-run_omnibus_anova<-function(data,group){
+run_omnibus_anova<-function(data,cat){
   envPCA2_pr_anovaDF %>%
-    select(site,{{group}},PC,scores) %>%
-    pivot_wider(id_cols=c(site,{{group}}),names_from="PC",values_from="scores")  %>%
+    select(site,!!sym(cat),PC,scores) %>%
+    pivot_wider(id_cols=c(site,!!sym(cat)),names_from="PC",values_from="scores") %>%
     select(-site) %>%
     as.data.frame() %>%
-    Skalski.adonis(PC.axes=c(2,3),Groups=1) 
+    Skalski.adonis(PC.axes=c(2,3),Groups=1) %>%
+    as_tibble() %>%
+    mutate(categorical.variable=cat,.before="Group.SS")
 }
 
 

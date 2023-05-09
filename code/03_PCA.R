@@ -397,13 +397,33 @@ BMIenvWideDF_trans %>%
              
             
 ### Run ANOVAs
-## local_site
-# Omnibus test
-run_omnibus_anova(envPCA2_pr_anovaDF,local_site)
-#significantly different
+## Omnibus test
+envPCA2_pr_anovaDF %>%
+  select(local_site:shore) %>%
+  names() %>%
+  map_df(run_omnibus_anova,data=envPCA2_pr_anovaDF) %>%
+  arrange(null.prob) -> bmi_pca_omnibus
+
+bmi_pca_omnibus
+#significantly different: local_site, fish_presence, and lotic
+#NS: location and shore
+
+## By axis tests (for significant test results only)
+envPCA2_pr_anovaDF %>%
+  select(local_site,fish_presence,lotic) %>%
+  names() %>%
+  map_df(function(x){
+    envPCA2_pr_anovaDF %>%
+      group_by(PC) %>%
+      anova_test(dv=scores, wid=site, between=x,detailed=TRUE) %>%
+      as_tibble() %>%
+      relocate(Effect,.before="PC")
+  }) -> bmi_pca_byaxis
+bmi_pca_byaxis
 
 
-# By axis
+## Interpretation of by-axis tests
+# local_site
 envPCA2_pr_anovaDF %>%
   group_by(PC) %>%
   anova_test(scores ~ local_site,detailed=TRUE)
@@ -413,13 +433,7 @@ envPCA2_pr_anovaDF %>%
   #affect from a visual standpoint, which is supported by the ANOVA).
 
 
-## location
-# Omnibus test
-run_omnibus_anova(envPCA2_pr_anovaDF,location)
-#NS
-
-
-# By axis
+# location
 envPCA2_pr_anovaDF %>%
   group_by(PC) %>%
   anova_test(scores ~ location,detailed=TRUE)
@@ -431,11 +445,7 @@ envPCA2_pr_anovaDF %>%
   #this relationship
 
 
-## fish_presence
-# Omnibus test
-run_omnibus_anova(envPCA2_pr_anovaDF,fish_presence) #significantly different
-
-# By axis
+# fish_presence
 envPCA2_pr_anovaDF %>%
   group_by(PC) %>%
   t_test(scores ~ fish_presence,detailed=TRUE)
@@ -449,11 +459,7 @@ envPCA2_pr_anovaDF %>%
 
 
 
-## lotic
-# Omnibus test
-run_omnibus_anova(envPCA2_pr_anovaDF,lotic) #significant
-
-# By axis
+# lotic
 envPCA2_pr_anovaDF %>%
   group_by(PC) %>%
   t_test(scores ~ lotic,detailed=FALSE)
@@ -463,14 +469,16 @@ envPCA2_pr_anovaDF %>%
   #a shift along PC2), which is supported by omnibus and PC-separated ANOVAs
 
 
-## shore
-run_omnibus_anova(envPCA2_pr_anovaDF,shore) #NS
-
+# shore
 envPCA2_pr_anovaDF %>%
   group_by(PC) %>%
   t_test(scores ~ shore,detailed=FALSE) #all NS
 
 
 
-
+  
+  
+  
+  
+  
 
