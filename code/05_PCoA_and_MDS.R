@@ -5,7 +5,7 @@
 ##### Source DF & functions (and load packages)=====================================================
 pacman::p_load(here,tidyverse,viridis,vegan,smacof,cowplot)
 
-source(here("code","DCA_Env_Arrows_function.R"))
+source(here::here("code","DCA_Env_Arrows_function.R"))
 
 select<-dplyr::select
 filter<-dplyr::filter
@@ -148,7 +148,7 @@ bmi_nmds_stress<-rep(NA,10)
 for(i in 1:10) {
   bmi_nmds_stress[i]<-smacof::mds(bmi_bray,ndim=i,type="ordinal",ties="primary")$stress
 }
-plot(bmi_nmds_stress,type="b")
+plot(bmi_nmds_stress,type="b") 
 #large decrease from 1 to 2 dim before more gradual declines
 
 bmi_nmds_stress[2]
@@ -229,7 +229,7 @@ factor_vec %>%
                                             1)))
   }) %>%
   set_names(factor_vec) %>% 
-  plot_grid(plotlist=.)
+  plot_grid(plotlist=.) -> bmi_nmds_cat
 
 
 ## Overlay (numerical) env vars for NMDS plots that show "clustering"
@@ -276,7 +276,7 @@ fp_env_p
 #base plotting
 plot(bmi_nmds_default)
 ord.on.env.arrows(ordination.site.scores=bmi_nmds_default$conf,
-                  env.matrix=bmi_nmds_envDF %>% select(elevation_trans:last_col()))
+                  env.matrix=bmi_nmds_envDF %>% select(ph_trans:last_col()))
 
 #ggplot
 ord_env<-ord.on.env.arrows(ordination.site.scores=bmi_nmds_default$conf,
@@ -291,7 +291,7 @@ ord_vars<-list(ord_env$axis1$coefficients,ord_env$axis2$coefficients) %>%
       select(variable="rowname",Estimate) %>%
       filter(variable!="(Intercept)") %>%
       mutate(variable=str_remove(variable,"^scale\\(env.matrix\\)")) %>%
-      rename(!!sym(y):="Estimate")
+      dplyr::rename(!!sym(y):="Estimate")
   }) %>%
   reduce(inner_join)
 
@@ -407,23 +407,6 @@ plot_grid(l_env_p,l_ord_p)
 #interpretation of differences:
 #same as fish_presence
 
-
-
-
-# NEXT
-
-
-
-
-# DONE
-
-
-
-
-# LAST COMMIT
-#updated file path of input DF
-#update parts of script to reflect elevTemp composite var
-#updated interpretation (in comments)
 
 
 
