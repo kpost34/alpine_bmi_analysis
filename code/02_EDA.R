@@ -68,12 +68,12 @@ barplotter_avg(BMIcountTidyDF,family,count,angled=TRUE)
 a<-list("location","local_site")
 b<-list("darkred","steelblue")
 
-mean_n_cat_env_bar<-list(a,b) %>%
+mean_n_cat_env_bar_loc_ls<-list(a,b) %>%
   pmap(function(a,b){
     barplotter_avg(dat=BMItotTidyDF,ind=!!sym(a),dep=count,col=b) 
 }) %>%
   set_names(as.character(a)) %>%
-  plot_grid(plotlist=.,nrow=2)
+  plot_grid(plotlist=.,labels=c("A","B"),nrow=2)
 
 
 ### Order-Location----------------------------------------------------------------------------------
@@ -235,7 +235,7 @@ BMIenvcountWideDF %>%
 x<-list("fish_presence","lotic","shore")
 y<-list("darkred","steelblue","darkgreen")
 
-mean_n_cat_env_bar<-list(x,y) %>%
+mean_n_cat_env_bar_fp_lot_sh<-list(x,y) %>%
   pmap(function(x,y){
     barplotter_avg(dat=BMIenvtotWideDF,ind=!!sym(x),dep=count,col=y) 
 }) %>%

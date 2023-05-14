@@ -262,5 +262,8 @@ BMIenvWideDF %>%
   
 
 ### Remove extraneous objects
-rm(list=setdiff(ls(),c("BMIenvWideDF","BMIenvTidyDF","BMIcountTidyDF","BMIcountWideDF","BMIenvcountWideDF")))
+rm(list=ls(pattern="BMIn_input_path|BMIn_inputDF|BMInDF|BMItrait_input_path|BMItrait_inputDF|
+                    envVar_input_path|envVar_inputDF|envVarDF|envVarReDF|fullBMIenvDF|tmpJoinDF|list_df|trait_ALB_creek_countDF|
+                    traitCountDF|traitCountRe2DF|traitCountReDF"))
+# rm(list=setdiff(ls(),c("BMIenvWideDF","BMIenvTidyDF","BMIcountTidyDF","BMIcountWideDF","BMIenvcountWideDF")))
 

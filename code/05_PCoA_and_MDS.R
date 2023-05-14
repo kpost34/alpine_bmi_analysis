@@ -229,13 +229,23 @@ factor_vec %>%
                                             1)))
   }) %>%
   set_names(factor_vec) %>% 
-  plot_grid(plotlist=.) -> bmi_nmds_cat
+  plot_grid(plotlist=.,labels=LETTERS[1:5]) -> bmi_nmds_cat
 
 
 ## Overlay (numerical) env vars for NMDS plots that show "clustering"
 # fish_presence
 #predict env var given site scores on ordination axes
 ef<-envfit(env=bmi_nmds_envDF,ord=bmi_nmds_default$conf)
+
+#create table of ef for report
+ef$vectors$arrows %>%
+  as.data.frame() %>%
+  rownames_to_column("variable") %>%
+  bind_cols(
+    tibble(r2=ef$vectors$r,
+           `Pr(>r)`=ef$vectors$pvals)
+  ) %>%
+  filter(!str_detect(variable,"^D")) -> ef_table
 
 ef_vars<-as.data.frame(ef$vectors$arrows*sqrt(ef$vectors$r)) %>%
   rownames_to_column(var="variable") %>%
@@ -281,6 +291,20 @@ ord.on.env.arrows(ordination.site.scores=bmi_nmds_default$conf,
 #ggplot
 ord_env<-ord.on.env.arrows(ordination.site.scores=bmi_nmds_default$conf,
                   env.matrix=bmi_nmds_envDF %>% select(ph_trans:last_col()))
+
+
+#tables of test results for report
+ord_env[-3] %>% 
+  map(function(x){
+  x$coefficients %>%
+    as.data.frame() %>%
+    rownames_to_column("variable") %>%
+    mutate(variable=str_remove(variable,"^scale\\(env.matrix\\)"),
+           across(!variable,~signif(.x,3)))
+  }) %>%
+  bind_rows(.id="axis") %>%
+  mutate(axis=str_replace(axis,"^axis","NMDS ")) -> ord_env_table
+
 
 ord_vars<-list(ord_env$axis1$coefficients,ord_env$axis2$coefficients) %>%
   set_names(c("D1","D2")) %>%
