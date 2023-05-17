@@ -315,8 +315,8 @@ biplot(envPCA2_pr)
 ## Distance-preserving
 ggbiplot(envPCA2_pr,scale=0,labels=1:22) +
   expand_limits(x=c(NA,2),
-                y=c(NA,2)) +
-  theme_bw() 
+                y=c(NA,2.5)) +
+  theme_bw() -> bmi_ggbiplot_nogroup
 
 
 
@@ -354,7 +354,7 @@ bmi_cat_vars %>%
     ggbiplot(envPCA2_pr,scale=0,groups=BMIenvWideDF_trans[[g]],ellipse=TRUE) +
       ggtitle(paste("Grouped by",g)) +
       expand_limits(x=c(NA,2),
-                    y=c(NA,2.5)) +
+                    y=c(NA,3)) +
       geom_point(aes(color=BMIenvWideDF_trans[[g]])) +
       labs(color=g) +
       scale_color_viridis_d(end=0.8) +
