@@ -229,7 +229,7 @@ factor_vec %>%
                                             1)))
   }) %>%
   set_names(factor_vec) %>% 
-  plot_grid(plotlist=.,labels=LETTERS[1:5]) -> bmi_nmds_cat
+  plot_grid(plotlist=.,labels=LETTERS[1:5],align="hv") -> bmi_nmds_cat
 
 
 ## Overlay (numerical) env vars for NMDS plots that show "clustering"
