@@ -251,11 +251,13 @@ n_env_scatter_smooth<-BMIenvtotWideDF %>%
   ggplot(aes(x=value,y=count,color=variable)) +
   geom_point(size=2.5,show.legend=FALSE) +
   geom_smooth(aes(x=value,y=count),method="lm") +
-  stat_cor(label.y=375,label.sep="\n") +
+  stat_cor(label.y=375,label.sep="\n",color="black") +
   facet_wrap(~variable,scales="free_x") +
   expand_limits(y=c(0,400)) +
   scale_color_viridis_d(end=0.8) +
-  theme_bw()
+  theme_bw() +
+  theme(legend.position="none")
+
 
 
 
