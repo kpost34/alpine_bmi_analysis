@@ -130,7 +130,7 @@ BMIenvWideDF_trans2 %>%
 ## Test symmetry of Boxcox-transformed pH and nitrate
 # Measure skewness
 BMIenvWideDF_trans2 %>% 
-  select(ph="ph_boxcox",nitrate="nitrate_boxcox") %>%
+  select(ph_trans="ph_boxcox",nitrate_trans="nitrate_boxcox") %>%
   skewness() -> ph_nitrate_boxcox_skewness
 
 ph_nitrate_boxcox_skewness
@@ -143,7 +143,7 @@ c("ph_boxcox","nitrate_boxcox") %>%
       jarque.test() %>%
       .[c("statistic","p.value")] %>%
       as_tibble() %>%
-      mutate(var=str_remove(x,"_boxcox$"),.before=statistic)
+      mutate(variable=str_replace(x,"_boxcox$","_trans"),.before=statistic)
 }) -> ph_nitrate_boxcox_jarque_test
 
 ph_nitrate_boxcox_jarque_test
@@ -358,12 +358,13 @@ bmi_cat_vars %>%
       geom_point(aes(color=BMIenvWideDF_trans[[g]])) +
       labs(color=g) +
       scale_color_viridis_d(end=0.8) +
-      theme_bw() 
+      theme_bw() +
+      theme(legend.position="bottom")
   }) -> bmi_ggbiplot_list_ell
 
 #graph all in a single plot
 bmi_ggbiplot_list_ell[c(3,4,1)] %>%
-  plot_grid(plotlist=.,nrow=2,labels=c("A","B","C")) -> bmi_pca_biplot_groups
+  plot_grid(plotlist=.,nrow=2,labels=c("A","B","C"),align="h") -> bmi_pca_biplot_groups
 
 
 ## ggplot with ggfortify (and shore as a categorical variable)
@@ -402,7 +403,8 @@ envPCA2_pr_anovaDF %>%
   select(local_site:shore) %>%
   names() %>%
   map_df(run_omnibus_anova,data=envPCA2_pr_anovaDF) %>%
-  arrange(null.prob) -> bmi_pca_omnibus
+  arrange(null.prob) %>%
+  dplyr::rename(variable="categorical.variable") -> bmi_pca_omnibus
 
 bmi_pca_omnibus
 #significantly different: local_site, fish_presence, and lotic
@@ -417,7 +419,7 @@ envPCA2_pr_anovaDF %>%
       group_by(PC) %>%
       anova_test(dv=scores, wid=site, between=x,detailed=TRUE) %>%
       as_tibble() %>%
-      relocate(Effect,.before="PC")
+      arrange(PC)
   }) -> bmi_pca_byaxis
 bmi_pca_byaxis
 
@@ -455,8 +457,6 @@ envPCA2_pr_anovaDF %>%
 #supported in that ellipses show clear separation between the two groups; however, PC1 is clearly
   #more discriminatory. PC1 is negatively associated with sat and elevation and positively with
   #temp & DO, which likely influence fish ecology than pH, which is positively associated with PC2
-
-
 
 
 # lotic
