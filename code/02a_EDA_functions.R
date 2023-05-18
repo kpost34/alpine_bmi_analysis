@@ -14,7 +14,7 @@ barplotter_tot<-function(dat,ind,dep,angled=FALSE,col="steelblue"){
     labs(x=str_to_title(quo_name(enquo(ind))),
          y=paste("Total",quo_name(enquo(dep)))) +
     scale_y_continuous(expand=expansion(mult=c(0,0.1))) +
-    theme_bw() -> p
+    theme_bw(base_size=12) -> p
   
   if(angled==TRUE) {
       p + theme(axis.text.x=element_text(angle=45,vjust=0.5,hjust=0.5))
@@ -36,10 +36,10 @@ barplotter_avg<-function(dat,ind,dep,ebar=FALSE,angled=FALSE,col="steelblue"){
     mutate("{{ind}}" := fct_reorder({{ind}},mean_y,.fun=sum,.desc=TRUE)) %>%
     ggplot(aes(x={{ind}},y=mean_y)) +
     geom_col(color="black",fill=col) +
-    labs(x=str_to_title(quo_name(enquo(ind))),
+    labs(x=quo_name(enquo(ind)),
          y=paste("Mean",quo_name(enquo(dep)))) +
     scale_y_continuous(expand=expansion(mult=c(0,0.1))) +
-    theme_bw() -> p0
+    theme_bw(base_size=12) -> p0
   
   if(ebar==TRUE) {
     p0 + 
@@ -69,7 +69,7 @@ barplotter_avg2<-function(dat,ind1,ind2,dep,pos="stack",angled=FALSE){
     labs(x=str_to_title(quo_name(enquo(ind1))), y=paste("Mean",quo_name(enquo(dep)))) +
     scale_y_continuous(expand=expansion(mult=c(0,0.1))) +
     scale_fill_viridis_d(end=0.92) +
-    theme_bw() -> p
+    theme_bw(base_size=12) -> p
   
   #display x axis text at 45o angle when angled==TRUE
   if(angled==TRUE) {
@@ -89,8 +89,8 @@ bar_faceter<-function(dat,ind1,ind2,dep,angled=FALSE){
     geom_col(color="black") +
     facet_wrap(vars({{ind2}}),scales="free") +
     scale_fill_viridis_d() +
-    labs(x=str_to_title(quo_name(enquo(ind1))), y=paste("Mean",quo_name(enquo(dep)))) +
-    theme_bw() +
+    labs(x=quo_name(enquo(ind1)), y=paste("Mean",quo_name(enquo(dep)))) +
+    theme_bw(base_size=12) +
     theme(legend.position="none") -> p
   
   if(angled==TRUE){
@@ -110,7 +110,7 @@ boxplotter<-function(dat,ind,dep){
     geom_jitter() +
     scale_y_continuous(trans = pseudo_log_trans()) +
     scale_color_viridis_d(end=0.92) +
-    theme_bw() 
+    theme_bw(base_size=12) 
 }
 
 

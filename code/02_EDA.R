@@ -114,7 +114,7 @@ BMIenvWideDF %>%
   ggplot() +
   geom_bar(aes(x=location,fill=shore),color="black") +
   scale_fill_viridis_d() +
-  theme_bw() +
+  theme_bw(base_size=12) +
   theme(axis.text.x=element_text(angle=45,vjust=0.5,hjust=0.5))
 
 # Proportion
@@ -123,7 +123,7 @@ BMIenvWideDF %>%
   geom_bar(aes(x=location,y=..count../sum(..count..),fill=shore),color="black") +
   scale_fill_viridis_d() +
   labs(y="proportion") +
-  theme_bw() +
+  theme_bw(base_size=12) +
   theme(axis.text.x=element_text(angle=45,vjust=0.5,hjust=0.5))
 
 
@@ -134,26 +134,26 @@ BMIenvWideDF %>%
 BMIenvWideDF %>% 
   select(elevation:sat) %>%
   ggpairs() +
-  theme_bw() 
+  theme_bw(base_size=12) 
 
 # Subset (with smoother)
 BMIenvWideDF %>% 
   select(elevation:sat) %>%
   ggpairs(lower=list(continuous=wrap(smoother))) +
-  theme_bw() 
+  theme_bw(base_size=12) 
 
 
 # Full dataset (without smoother)
 BMIenvWideDF %>% 
   select(elevation:nitrate) %>%
   ggpairs() +
-  theme_bw()
+  theme_bw(base_size=12)
 
 # Full dataset (with smoother)
 env_scatter_smooth<-BMIenvWideDF %>% 
   select(elevation:nitrate) %>%
   ggpairs(lower=list(continuous=wrap(smoother))) +
-  theme_bw()
+  theme_bw(base_size=12)
 
 
 ## By lotic/lentic
@@ -161,26 +161,26 @@ env_scatter_smooth<-BMIenvWideDF %>%
 BMIenvWideDF %>% 
   select(elevation:sat,lotic) %>%
   ggpairs(columns=1:3,aes(color=as.factor(lotic))) +
-  theme_bw()
+  theme_bw(base_size=12)
 
 # Subset (with smoother)
 BMIenvWideDF %>% 
   select(elevation:sat,lotic) %>%
   ggpairs(columns=1:3,aes(color=as.factor(lotic)),lower=list(continuous=wrap(smoother))) +
-  theme_bw()
+  theme_bw(base_size=12)
 
 
 # Full dataset (without smoother)
 BMIenvWideDF %>% 
   select(elevation:nitrate,lotic) %>%
   ggpairs(columns=1:6,aes(color=as.factor(lotic))) +
-  theme_bw()
+  theme_bw(base_size=12)
 
 # Full dataset (with smoother)
 env_byLotic_scatter_smooth<-BMIenvWideDF %>% 
   select(elevation:nitrate,lotic) %>%
   ggpairs(columns=1:6,aes(color=as.factor(lotic)),lower=list(continuous=wrap(smoother))) +
-  theme_bw()
+  theme_bw(base_size=12)
 
 
 ## By fish presence 
@@ -188,26 +188,26 @@ env_byLotic_scatter_smooth<-BMIenvWideDF %>%
 BMIenvWideDF %>% 
   select(elevation:sat,fish_presence) %>%
   ggpairs(columns=1:3,aes(color=as.factor(fish_presence))) +
-  theme_bw()
+  theme_bw(base_size=12)
 
 
 # Subset (with smoother)
 BMIenvWideDF %>% 
   select(elevation:sat,fish_presence) %>%
   ggpairs(columns=1:3,aes(color=as.factor(fish_presence)),lower=list(continuous=wrap(smoother))) +
-  theme_bw()
+  theme_bw(base_size=12)
 
 # Full dataset (without smoother)
 BMIenvWideDF %>% 
   select(elevation:nitrate,fish_presence) %>%
   ggpairs(columns=1:6,aes(color=as.factor(fish_presence))) +
-  theme_bw()
+  theme_bw(base_size=12)
 
 # Full dataset (with smoother)
 BMIenvWideDF %>% 
   select(elevation:nitrate,fish_presence) %>%
   ggpairs(columns=1:6,aes(color=as.factor(fish_presence)),lower=list(continuous=wrap(smoother))) +
-  theme_bw()
+  theme_bw(base_size=12)
 
 
 ### Heat maps (full dataset)
@@ -218,7 +218,7 @@ cor_env_heatmap<-BMIenvWideDF %>%
   #        mid = "#EEEEEE",
   #        high = "#3B9AB2") +
   #scale_fill_distiller(palette ="RdBu", direction = 1) +
-  theme_bw()
+  theme_bw(base_size=12)
 
 
 
@@ -255,7 +255,7 @@ n_env_scatter_smooth<-BMIenvtotWideDF %>%
   facet_wrap(~variable,scales="free_x") +
   expand_limits(y=c(0,400)) +
   scale_color_viridis_d(end=0.8) +
-  theme_bw() +
+  theme_bw(base_size=12) +
   theme(legend.position="none")
 
 

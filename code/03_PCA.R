@@ -161,9 +161,12 @@ BMIenvWideDF %>%
 
 ### Transformed
 BMIenvWideDF_trans %>% 
+  mutate(elevation_trans=elevation_trans/1000000) %>%
   select(sat,ends_with("_trans")) %>%
   ggpairs(lower=list(continuous=wrap(smoother))) +
-  theme_bw() -> boxcox_scatter
+  scale_x_continuous(n.breaks=4) +
+  theme_bw(base_size=12) +
+  labs(caption="Note: elevation_trans are in x 10^6") -> boxcox_scatter
 
 boxcox_scatter
 #aside from a few pairs (e.g., sat-nitrate, elevation-nitrate, and DO-nitrate), there tends to be
@@ -316,7 +319,7 @@ biplot(envPCA2_pr)
 ggbiplot(envPCA2_pr,scale=0,labels=1:22) +
   expand_limits(x=c(NA,2),
                 y=c(NA,2.5)) +
-  theme_bw() -> bmi_ggbiplot_nogroup
+  theme_bw(base_size=12) -> bmi_ggbiplot_nogroup
 
 
 
@@ -325,7 +328,7 @@ ggbiplot(envPCA2_pr,scale=0,labels=1:22) +
 ggbiplot(envPCA2_pr,scale=0,labels=1:22,groups=BMIenvWideDF_trans$lotic,ellipse=TRUE) +
   expand_limits(x=c(NA,2),
                 y=c(NA,2)) +
-  theme_bw()
+  theme_bw(base_size=12)
 
 
 # map 
@@ -342,7 +345,7 @@ bmi_cat_vars %>%
       geom_point(aes(color=BMIenvWideDF_trans[[g]])) +
       labs(color=g) +
       scale_color_viridis_d(end=0.8) +
-      theme_bw() 
+      theme_bw(base_size=12) 
   }) -> bmi_ggbiplot_list
 #poor discrimination: location and shore
 #better discrimination: local_site, fish_presence, and lotic
@@ -353,12 +356,12 @@ bmi_cat_vars %>%
   map(function(g){
     ggbiplot(envPCA2_pr,scale=0,groups=BMIenvWideDF_trans[[g]],ellipse=TRUE) +
       ggtitle(paste("Grouped by",g)) +
-      expand_limits(x=c(NA,2),
-                    y=c(NA,3)) +
+      expand_limits(x=c(NA,2.5),
+                    y=c(NA,3.5)) +
       geom_point(aes(color=BMIenvWideDF_trans[[g]])) +
       labs(color=g) +
       scale_color_viridis_d(end=0.8) +
-      theme_bw() +
+      theme_bw(base_size=12) +
       theme(legend.position="bottom")
   }) -> bmi_ggbiplot_list_ell
 
@@ -372,14 +375,14 @@ autoplot(envPCA2_pr,loadings=TRUE,loadings.label=TRUE,shape=FALSE,
          loadings.label.repel=TRUE) +
   geom_point(aes(color=BMIenvWideDF_trans$shore),alpha=0.3) +
   labs(color="shore") +
-  theme_bw()
+  theme_bw(base_size=12)
 
 
 ## Variable-preserving
 ggbiplot(envPCA2_pr,scale=1,labels=1:22) +
   expand_limits(x=c(NA,2),
                 y=c(NA,2)) +
-  theme_bw() 
+  theme_bw(base_size=12) 
 
 
 

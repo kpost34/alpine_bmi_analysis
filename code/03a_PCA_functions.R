@@ -28,7 +28,7 @@ histogrammer<-function(dat,var,meas,nbin=8,cols=NULL){
       geom_histogram(aes({{meas}},fill={{var}}),color="black",bins=nbin) +
       facet_wrap(vars({{var}}),scales="free",ncol=cols) +
       scale_fill_viridis_d(guide="none") +
-      theme_bw()
+      theme_bw(base_size=12)
 }
 
 ## Q-Q Plots
@@ -40,7 +40,7 @@ qqplotter<-function(dat,var,meas,cols=NULL){
     facet_wrap(vars({{var}}),scales="free",ncol=cols) +
     labs(x="Theoretical Quantiles",
          y="Sample Quantiles") +
-    theme_bw()
+    theme_bw(base_size=12)
 }
 
 

@@ -220,7 +220,7 @@ factor_vec %>%
       scale_color_viridis_d(end=0.8) +
       labs(x="NMDS axis 1",
            y="NMDS axis2") +
-      theme_bw() +
+      theme_bw(base_size=12) +
       theme(legend.position="bottom") +
       guides(color=guide_legend(title.position="top",
                                 title.hjust=0.5,
@@ -267,7 +267,7 @@ fp_env_p<-bmi_nmds_envDF %>%
   labs(x="NMDS axis 1",
        y="NMDS axis2",
        subtitle="env var~ord axes") +
-  theme_bw() +
+  theme_bw(base_size=12) +
   theme(legend.position="bottom")
 
 fp_env_p
@@ -336,7 +336,7 @@ fp_ord_p<-bmi_nmds_envDF %>%
   labs(x="NMDS axis 1",
        y="NMDS axis2",
        subtitle="ord axis~env vars") +
-  theme_bw() +
+  theme_bw(base_size=12) +
   theme(legend.position="bottom")
 
 fp_ord_p
@@ -380,7 +380,7 @@ l_env_p<-bmi_nmds_envDF %>%
   labs(x="NMDS axis 1",
        y="NMDS axis 2",
        subtitle="env var~ord axes") +
-  theme_bw() +
+  theme_bw(base_size=12) +
   theme(legend.position="bottom")
 
 l_env_p
@@ -411,7 +411,7 @@ l_ord_p<-bmi_nmds_envDF %>%
   labs(x="NMDS axis 1",
        y="NMDS axis 2",
        subtitle="ord axis~env vars") +
-  theme_bw() +
+  theme_bw(base_size=12) +
   theme(legend.position="bottom")
 
 l_ord_p
