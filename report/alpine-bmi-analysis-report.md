@@ -1,7 +1,7 @@
 ---
 title: "Alpine Benthic Macroinvertebrate Analysis"
 author: "Keith Post"
-date: "`r format(Sys.Date())`"
+date: "2023-05-27"
 output: 
   html_document:
     fig_caption: true
@@ -9,20 +9,7 @@ output:
 ---
 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, fig.align="center")
 
-pacman::p_load(knitr,here,tidyverse,naniar,scales,GGally,cowplot,ggpubr,viridis,vegan,smacof,DT)
-
-here<-here::here
-select<-dplyr::select
-filter<-dplyr::filter
-mutate<-dplyr::mutate
-
-source(here::here("code","02_EDA.R"))
-source(here::here("code","03_PCA.R"))
-source(here::here("code","05_PCoA_and_MDS.R"))
-```
 
 <br>
 
@@ -84,16 +71,18 @@ The BMI and environmental data were wrangled, explored, and visualized before an
 ### A. Taxonomic data
 The study area was dipteran dominant; this order (primarily chironomids) made up over 81% of all BMIs (Fig. 1). Caddisflies composed just over 9% of individuals, and the third most abundant order were freshwater leeches (order Rhynchobdellida) with nearly 5% of all specimens and a total abundance of 117 individuals.
 
-```{r ordinal counts,fig.cap="*Figure 1. Total numbers of benthic macroinvertebrates (BMIs) collected by order.*"}
-n_ord_bar
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/ordinal counts-1.png" alt="*Figure 1. Total numbers of benthic macroinvertebrates (BMIs) collected by order.*"  />
+<p class="caption">*Figure 1. Total numbers of benthic macroinvertebrates (BMIs) collected by order.*</p>
+</div>
 <br>
 
 BMIs were most commonly found in creek sites followed by inlet and waterfall locations; each *location* averaged more than 200 individuals (Fig. 2A). Lake and outlet sites had far fewer BMIs with neither location averaging more than 60 specimens. BMI abundance varied by *local_site* with ALB as the most abundant (> 140 individuals/site) and GL1, the least abundant (Fig. 2B).
 
-```{r location and local_site counts, fig.height=7, fig.width=5,fig.cap="*Figure 2. Average numbers of BMIs collected by* project_site *and either* location *or* local_site."}
-mean_n_cat_env_bar_loc_ls
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/location and local_site counts-1.png" alt="*Figure 2. Average numbers of BMIs collected by* project_site *and either* location *or* local_site."  />
+<p class="caption">*Figure 2. Average numbers of BMIs collected by* project_site *and either* location *or* local_site.</p>
+</div>
 <br>
 <br>
 
@@ -101,9 +90,10 @@ mean_n_cat_env_bar_loc_ls
 #### 1. Categorical-numerical
 Figure 3 illustrates how the various numerical environmental variables (including the binary *fish_presence* and *lotic* variables) varied among *local_site*s. 
 
-```{r mean env var by local_site, fig.height=9, fig.width=9, fig.cap="*Figure 3. Average value of environmental variable by* local_site *(lake).*"}
-mean_env_locsite_bar_facet
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/mean env var by local_site-1.png" alt="*Figure 3. Average value of environmental variable by* local_site *(lake).*"  />
+<p class="caption">*Figure 3. Average value of environmental variable by* local_site *(lake).*</p>
+</div>
 <br>
 
 Clearly no fish were found in GL4 and GL5, and GL1 comprised only lentic sites. *DO* and *sat* were much greater, on average, in GL5 sites compared to the other *local_site*s. GL5 sites were located at the highest elevations and unsurprisingly had the lowest temperatures (*temp*), *nitrate*, on average, was much greater in ALB and GL5 sites relative to GL1 and GL4 sites.
@@ -112,23 +102,26 @@ Clearly no fish were found in GL4 and GL5, and GL1 comprised only lentic sites. 
 #### 2. Numerical-numerical
 The multi-panel graph shows the pairwise relationships among all numerical (i.e., non-binary, non-categorical) environmental variables with linear regression lines, correlations, and indicators of significance. As expected, *DO* and *sat* were strongly, positively correlated per their tight regression line and *r* > 0.96 (Fig. 4). *temp* was significantly, negatively correlated with *elevation*, *sat*, *DO*, and *nitrate*. *elevation* was significantly, positively correlated with *sat* and *DO*.
 
-```{r scatterplots with reg, fig.height=9, fig.width=9,fig.cap="*Figure 4. Pairwise relationship for all six continuous environmental variables are drawn. The lower left half of the matrix contains all pairwise scatterplots with regression lines. The upper right half comprises correlations and, if applicable, significance stars. Density plots of each individual variable are constructed along the diagonal.*"}
-env_scatter_smooth
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/scatterplots with reg-1.png" alt="*Figure 4. Pairwise relationship for all six continuous environmental variables are drawn. The lower left half of the matrix contains all pairwise scatterplots with regression lines. The upper right half comprises correlations and, if applicable, significance stars. Density plots of each individual variable are constructed along the diagonal.*"  />
+<p class="caption">*Figure 4. Pairwise relationship for all six continuous environmental variables are drawn. The lower left half of the matrix contains all pairwise scatterplots with regression lines. The upper right half comprises correlations and, if applicable, significance stars. Density plots of each individual variable are constructed along the diagonal.*</p>
+</div>
 <br>
 
 Scatter plots conditioned on lotic status (i.e., 0 = lentic and 1 = lotic) were visualized (Fig. 5). A few of the significant correlations discussed in the previous figure are inconsistent between *lotic* categories. For instance, *temp*, *sat*, and *DO* were significantly correlated with *elevation* (*temp* negatively, and the other two variables positively); however, when conditioned by lotic status, these relationships strengthen when the locations were lentic but were non-significant when lotic. Other patterns occurred with lotic status as a conditioning variable. For example, *ph* and *sat* were weakly correlated (*r* = 0.149) but when lotic status was considered, these relationships strengthened and became significant for both lotic (*r* = 0.722) and lentic (*r* = 0.588) locations.
 
-```{r scatterplots by lotic with reg,fig.height=9,fig.width=9,fig.cap="*Figure 5. Pairwise relationship for all six continuous environmental variables are drawn and distinguished according to lotic status: lentic (lotic = 0) is colored in red and lotic (lotic=1) is colored in green. The lower left half of the matrix contains all pairwise scatterplots with regression lines according to lotic status. The upper right half comprises correlations and, if applicable, significance stars for all points and by lotic status. Density plots of each individual variable according to lotic status are constructed along the diagonal.*"}
-env_byLotic_scatter_smooth
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/scatterplots by lotic with reg-1.png" alt="*Figure 5. Pairwise relationship for all six continuous environmental variables are drawn and distinguished according to lotic status: lentic (lotic = 0) is colored in red and lotic (lotic=1) is colored in green. The lower left half of the matrix contains all pairwise scatterplots with regression lines according to lotic status. The upper right half comprises correlations and, if applicable, significance stars for all points and by lotic status. Density plots of each individual variable according to lotic status are constructed along the diagonal.*"  />
+<p class="caption">*Figure 5. Pairwise relationship for all six continuous environmental variables are drawn and distinguished according to lotic status: lentic (lotic = 0) is colored in red and lotic (lotic=1) is colored in green. The lower left half of the matrix contains all pairwise scatterplots with regression lines according to lotic status. The upper right half comprises correlations and, if applicable, significance stars for all points and by lotic status. Density plots of each individual variable according to lotic status are constructed along the diagonal.*</p>
+</div>
 <br>
 
 Pairwise relationships between BMI abundances and the six numeric environmental variables were visualized as part of the exploratory data analysis (Fig. 6). 
 
-```{r scatterplots env count with reg,fig.height=7,fig.width=8,fig.cap="*Figure 6. Scatterplots with regression lines of each numeric environmental variable regressed against total BMI abudnance.*" }
-n_env_scatter_smooth
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/scatterplots env count with reg-1.png" alt="*Figure 6. Scatterplots with regression lines of each numeric environmental variable regressed against total BMI abudnance.*"  />
+<p class="caption">*Figure 6. Scatterplots with regression lines of each numeric environmental variable regressed against total BMI abudnance.*</p>
+</div>
 <br>
 
 Only *ph* was found to be significant, with an *r* = -0.58.
@@ -144,21 +137,18 @@ There are two assumptions of PCA per Shipley (2021): 1) normally (or at least sy
 #### 1. Distribution
 Distributions of variables were assessed visually and statistically. First, a series of Q-Q plots were constructed (Fig. 7), which showed that variables *ph* and *nitrate* were clearly not normally distributed. 
 
-```{r qqplots untransformed,fig.width=8,fig.cap="*Figure 7. Q-Q plots of each untransformed numeric enviornmental variable are presented.*"}
-BMIenv_qqplot
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/qqplots untransformed-1.png" alt="*Figure 7. Q-Q plots of each untransformed numeric enviornmental variable are presented.*"  />
+<p class="caption">*Figure 7. Q-Q plots of each untransformed numeric enviornmental variable are presented.*</p>
+</div>
 
 These results were supported by Shapiro tests.
 <br>
 
-```{r shapiro untransformed}
-BMIenv_shapiro %>%
-  mutate(across(c(statistic,p),~signif(.x,3)),
-         signif=ifelse(p<=.05,"Yes","No")) %>%
-  DT::datatable(rownames=FALSE,
-                options=list(dom="t"),
-                caption=htmltools::tags$caption("Table 1. Shapiro test results for untransformed numeric environmental variables.",
-                                                style="color:black; font-style: italic"))
+
+```{=html}
+<div id="htmlwidget-a740f4116cd9bdd2deec" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-a740f4116cd9bdd2deec">{"x":{"filter":"none","vertical":false,"caption":"<caption style=\"color:black; font-style: italic\">Table 1. Shapiro test results for untransformed numeric environmental variables.<\/caption>","data":[["DO","elevation","nitrate","ph","sat","temp"],[0.889,0.911,0.867,0.899,0.955,0.836],[0.0181,0.0504,0.00698,0.0281,0.397,0.00197],["Yes","No","Yes","Yes","No","Yes"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>variable<\/th>\n      <th>statistic<\/th>\n      <th>p<\/th>\n      <th>signif<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","columnDefs":[{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 ```
 <br>
 
@@ -166,32 +156,28 @@ Only the Q-Q plot for *sat* displayed normality, which was supported by the Shap
 
 Five of the six environmental variables underwent a Box-Cox transformation (i.e., only *sat* was left untransformed), and the Q-Q plots and Shapiro tests were re-run.
 
-```{r qqplots box-cox transform,fig.width=8,fig.cap="*Figure 8. Q-Q plots of six numeric environmental variables are presented. All variables but* sat *were Box-Cox transformed.*"}
-BMIenv_qqplot_trans
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/qqplots box-cox transform-1.png" alt="*Figure 8. Q-Q plots of six numeric environmental variables are presented. All variables but* sat *were Box-Cox transformed.*"  />
+<p class="caption">*Figure 8. Q-Q plots of six numeric environmental variables are presented. All variables but* sat *were Box-Cox transformed.*</p>
+</div>
 
-```{r shapiro box-cox transform}
-BMIenv_shapiro_trans %>%
-  mutate(across(!variable,~signif(.x,3)),
-         signif=ifelse(p<=.05,"Yes","No")) %>%
-  DT::datatable(rownames=FALSE,
-                options=list(dom="t"),
-                caption=htmltools::tags$caption("Table 2. Shapiro test results for five Box-Cox transformed environmental 
-                                                variables and dissolved oxygen saturation",
-                                                style="color:black; font-style: italic"))
+
+```{=html}
+<div id="htmlwidget-3133310e7cd54ca4e4ed" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-3133310e7cd54ca4e4ed">{"x":{"filter":"none","vertical":false,"caption":"<caption style=\"color:black; font-style: italic\">Table 2. Shapiro test results for five Box-Cox transformed environmental \n                                                variables and dissolved oxygen saturation<\/caption>","data":[["DO_trans","elevation_trans","nitrate_trans","ph_trans","sat","temp_trans"],[0.974,0.912,0.883,0.901,0.955,0.917],[0.801,0.0526,0.014,0.0313,0.397,0.0666],["No","No","Yes","Yes","No","No"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>variable<\/th>\n      <th>statistic<\/th>\n      <th>p<\/th>\n      <th>signif<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","columnDefs":[{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 ```
 
 These results (Fig. 8; Table 2) indicate considerable improvement in the distributions of *DO_trans* and *temp_trans* and a slight improvement for *elevation_trans* (note: transformed variables will be indicated with "[*variable name*]*_trans*). However, *ph_trans* and *nitrate_trans* were still non-normal following Box-Cox transformations. Additional transformations (i.e., log, square-root, inverse) were calculated for these two variables, and none could achieve normality. Given that only a symmetrical distribution is needed for a PCA, symmetry was assessed by measuring skewness and running a Jarque-Bera Test, which measures whether data have skewness and kurtosis similar to a normal distribution.
 
-```{r skewness ph nitrate box-cox transform}
-ph_nitrate_boxcox_skewness
 
-ph_nitrate_boxcox_jarque_test %>%
-  mutate(across(!variable,~signif(.x,3))) %>%
-  DT::datatable(rownames=FALSE,
-                options=list(dom="t"),
-                caption=htmltools::tags$caption("Table 3. Jarque-Bera test results of Box-Cox-transformed pH and nitrate",
-                                                style="color:black; font-style: italic"))
+```
+##      ph_trans nitrate_trans 
+##   -0.03295884   -0.05704655
+```
+
+```{=html}
+<div id="htmlwidget-20fbe96619ae5f26df49" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-20fbe96619ae5f26df49">{"x":{"filter":"none","vertical":false,"caption":"<caption style=\"color:black; font-style: italic\">Table 3. Jarque-Bera test results of Box-Cox-transformed pH and nitrate<\/caption>","data":[["ph_trans","nitrate_trans"],[0.345,2.35],[0.842,0.309]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>variable<\/th>\n      <th>statistic<\/th>\n      <th>p.value<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","columnDefs":[{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 ```
 <br>
 
@@ -203,9 +189,10 @@ All numerical environmental variables were retained. All variables but *sat* wer
 #### 2. Linear relationships
 The second assumption of PCA is that the variables have linear relationships (Shipley, 2021). This was assessed visually using scatter plots and regression lines and quantitatively via correlations.
 
-```{r scatter box-cox transform,fig.height=9,fig.width=9,fig.cap="*Figure 9. Pairwise relationship for all six continuous environmental variables are drawn. All variables but* sat *have undergone Box-Cox transformation. The lower left half of the matrix contains all pairwise scatterplots with regression lines. The upper right half comprises correlations and, if applicable, significance stars. Density plots of each individual variable are constructed along the diagonal.*"}
-boxcox_scatter
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/scatter box-cox transform-1.png" alt="*Figure 9. Pairwise relationship for all six continuous environmental variables are drawn. All variables but* sat *have undergone Box-Cox transformation. The lower left half of the matrix contains all pairwise scatterplots with regression lines. The upper right half comprises correlations and, if applicable, significance stars. Density plots of each individual variable are constructed along the diagonal.*"  />
+<p class="caption">*Figure 9. Pairwise relationship for all six continuous environmental variables are drawn. All variables but* sat *have undergone Box-Cox transformation. The lower left half of the matrix contains all pairwise scatterplots with regression lines. The upper right half comprises correlations and, if applicable, significance stars. Density plots of each individual variable are constructed along the diagonal.*</p>
+</div>
 <br>
 
 Aside from a few variable pairs involving *nitrate_trans* (e.g., *sat*-*nitrate_trans*, *elevation_trans*-*nitrate_trans*, *DO_trans*-*nitrate_trans*), there tended to be linear relationships among pairs of variables. In the *nitrate_trans* scatter plots, there did not appear to be a linear (or even non-linear) relationship with *sat*, *elevation_trans*, or *DO_trans*, which was supported by weak correlations (-0.15 < *r* < 0.15).
@@ -218,24 +205,15 @@ Given that *nitrate_trans* does not have linear relationships with all other env
 #### 1. Initial results
 A PCA was run on the five remaining continuous environmental variables (i.e., *sat_trans*, *elevation_trans*, *temp_trans*, *DO_trans* and *ph_trans*), and all variables but *sat* were transformed.
 
-```{r pca summary and loadings}
-summary(envPCA2_pr)$importance %>%
-  as.data.frame() %>%
-  rownames_to_column("variable") %>%
-  mutate(across(!variable,~signif(.x,3))) %>%
-  DT::datatable(rownames=FALSE,
-                options=list(dom="t"),
-                caption=htmltools::tags$caption("Table 4. Summary of principal components analysis (PCA) of numeric environmental variables.",
-                                                style="color:black; font-style: italic"))
 
-envPCA2_pr$rotation %>%
-  as.data.frame() %>%
-  rownames_to_column("variable") %>%
-  mutate(across(!variable,~signif(.x,3))) %>%
-  DT::datatable(rownames=FALSE,
-                options=list(dom="t"),
-                caption=htmltools::tags$caption("Table 5. PCA loadings of enviromental variables on five principal components",
-                                                style="color:black; font-style: italic"))
+```{=html}
+<div id="htmlwidget-319dac9d91538895606a" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-319dac9d91538895606a">{"x":{"filter":"none","vertical":false,"caption":"<caption style=\"color:black; font-style: italic\">Table 4. Summary of principal components analysis (PCA) of numeric environmental variables.<\/caption>","data":[["Standard deviation","Proportion of Variance","Cumulative Proportion"],[1.72,0.589,0.589],[1.06,0.224,0.813],[0.868,0.151,0.964],[0.39,0.0305,0.994],[0.17,0.00579,1]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>variable<\/th>\n      <th>PC1<\/th>\n      <th>PC2<\/th>\n      <th>PC3<\/th>\n      <th>PC4<\/th>\n      <th>PC5<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5]}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+```
+
+```{=html}
+<div id="htmlwidget-af0d26e35a007038d1c1" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-af0d26e35a007038d1c1">{"x":{"filter":"none","vertical":false,"caption":"<caption style=\"color:black; font-style: italic\">Table 5. PCA loadings of enviromental variables on five principal components<\/caption>","data":[["sat","elevation_trans","temp_trans","DO_trans","ph_trans"],[-0.53,-0.463,0.474,0.517,-0.114],[-0.085,0.285,0.254,0.136,0.91],[0.443,-0.536,0.522,-0.474,0.135],[-0.149,0.626,0.634,-0.25,-0.349],[-0.702,-0.157,-0.193,-0.653,0.135]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>variable<\/th>\n      <th>PC1<\/th>\n      <th>PC2<\/th>\n      <th>PC3<\/th>\n      <th>PC4<\/th>\n      <th>PC5<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5]}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 ```
 <br>
 
@@ -245,11 +223,10 @@ The PCA summary indicates that that the first two principal components (PCs) acc
 #### 2. Scree plot
 A scree plot was drawn to determine which PCs to plot.
 
-```{r pca scree plot,fig.cap="*Figure 10. The scree plot of the PCA is presented. The five principal components are on the x-axis and their inertia values (i.e., eigenvalues) are on the y-axis. A broken stick model is overlaid on top of the scree plot.*"}
-screeplot(envPCA2_pr,bstick=TRUE,type="barplot",
-          main=NA)
-abline(h=mean(envPCA2_pr$sdev^2))
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/pca scree plot-1.png" alt="*Figure 10. The scree plot of the PCA is presented. The five principal components are on the x-axis and their inertia values (i.e., eigenvalues) are on the y-axis. A broken stick model is overlaid on top of the scree plot.*"  />
+<p class="caption">*Figure 10. The scree plot of the PCA is presented. The five principal components are on the x-axis and their inertia values (i.e., eigenvalues) are on the y-axis. A broken stick model is overlaid on top of the scree plot.*</p>
+</div>
 <br>
 
 This plot shows that 1) the largest drop in eigenvalues occurred from PC1-PC2; 2) PC1 and PC2 were above the mean eigenvalue; and 3) only PC1 was above the broken stick model. 
@@ -258,9 +235,10 @@ This plot shows that 1) the largest drop in eigenvalues occurred from PC1-PC2; 2
 #### 3. Biplot
 Given that PC2 was above the mean eigenvalue and that it accounted for ~22% of the total variance, a distance-preserving biplot of PC1 and PC2 from the alpine lakes BMI data was constructed.
 
-```{r pca biplot ungrouped,fig.cap="*Figure 11. A biplot of the alpine lake sites is drawn on the first two principal components. The environmental variables are overlaid.*"}
-bmi_ggbiplot_nogroup
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/pca biplot ungrouped-1.png" alt="*Figure 11. A biplot of the alpine lake sites is drawn on the first two principal components. The environmental variables are overlaid.*"  />
+<p class="caption">*Figure 11. A biplot of the alpine lake sites is drawn on the first two principal components. The environmental variables are overlaid.*</p>
+</div>
 <br>
 
 The biplot of sites on PC1 and PC2 axes reflect the loadings described above. *sat* and *elevation_trans* were moderately negatively correlated and *temp_trans* and *DO_trans* were moderately positively correlated with PC1, while *ph_trans* was strongly positively correlated with PC2. There appear to be four groups of sites: 1) low elevation and high pH, 2) near the origin, 3) high temperature and pH, and 4) low pH.
@@ -269,9 +247,10 @@ The biplot of sites on PC1 and PC2 axes reflect the loadings described above. *s
 #### 4. Categorical variables
 Categorical variables were used to distinguish sites on biplots. *fish_presence*, *lotic*, and *local_site* are displayed in Figure 12.
 
-```{r pca biplot grouped,fig.height=7.5,fig.width=8,fig.cap="*Figure 12. Biplots of the alpine lake sites are drawn on the first two principal components with environmental variables overlaid. Site locations are colored by A)* fish_presence, *B)* lotic, or *C)* local_site *status.*"}
-bmi_pca_biplot_groups
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/pca biplot grouped-1.png" alt="*Figure 12. Biplots of the alpine lake sites are drawn on the first two principal components with environmental variables overlaid. Site locations are colored by A)* fish_presence, *B)* lotic, or *C)* local_site *status.*"  />
+<p class="caption">*Figure 12. Biplots of the alpine lake sites are drawn on the first two principal components with environmental variables overlaid. Site locations are colored by A)* fish_presence, *B)* lotic, or *C)* local_site *status.*</p>
+</div>
 <br>
 
 These biplots indicate strong discrimination among sites according to categorical variables. For example, *fish_presence* tended to diverge along PC1. Sites with fish appear to have higher temperatures and dissolved oxygen levels, while sites without fish tend to have higher dissolved oxygen saturation and occur at greater elevation.
@@ -280,26 +259,19 @@ These biplots indicate strong discrimination among sites according to categorica
 #### 5. Statistical analysis
 The PC scores were tested for differences among groups of categorical variables using ANOVAs. First, an omnibus test was run to determine whether differences occurred regardless of PC axis. If a significant test resulted, a by-axis test was conducted to ascertain where the differences occurred with respect to each PC axis.
 
-```{r pca omnibus}
- bmi_pca_omnibus %>%
-  mutate(across(c(Group.SS,Residual.SS,F.stat,null.prob),~signif(.x,3))) %>%
-  DT::datatable(rownames=FALSE,
-                options=list(dom="t"),
-                caption=htmltools::tags$caption("Table 6. Omnibus ANOVA results for all categorical variables",
-                                                style="color:black; font-style: italic"))
+
+```{=html}
+<div id="htmlwidget-967ac8cf5604adde39f8" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-967ac8cf5604adde39f8">{"x":{"filter":"none","vertical":false,"caption":"<caption style=\"color:black; font-style: italic\">Table 6. Omnibus ANOVA results for all categorical variables<\/caption>","data":[["local_site","fish_presence","lotic","location","shore"],[11.3,17.3,8.61,2.82,1.75],[0.481,1.27,1.7,1.85,2.08],[23.6,13.6,5.05,1.53,0.839],[6,2,2,8,6],[36,40,40,34,36],[4.2e-11,3.05e-05,0.0111,0.185,0.548]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>variable<\/th>\n      <th>Group.SS<\/th>\n      <th>Residual.SS<\/th>\n      <th>F.stat<\/th>\n      <th>df1<\/th>\n      <th>df2<\/th>\n      <th>null.prob<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6]}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 ```
 <br>
 
 The omnibus test results indicated that there were significant differences among sites according to categorical variables *local_site*, *fish_presence*, and *lotic* but not for *location* or *shore* (Table 6). Thus, by-axis tests were conducted on the former three variables.
 
-```{r pca byaxis}
-bmi_pca_byaxis %>%
-  mutate(across(c(SSn,SSd,F),~signif(.x,3))) %>%
-  DT::datatable(rownames=FALSE,
-               options=list(dom="t"),
-               caption=htmltools::tags$caption("Table 7. By-axis ANOVA results for significant categorical variables 
-                                               from omnibus test",
-                                               style="color:black; font-style: italic"))
+
+```{=html}
+<div id="htmlwidget-d4a11ead5547ae23e1b2" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-d4a11ead5547ae23e1b2">{"x":{"filter":"none","vertical":false,"caption":"<caption style=\"color:black; font-style: italic\">Table 7. By-axis ANOVA results for significant categorical variables \n                                               from omnibus test<\/caption>","data":[["PC1","PC2","PC1","PC2","PC1","PC2"],["local_site","local_site","fish_presence","fish_presence","lotic","lotic"],[55.2,12.9,34.4,0.262,4.9,12.3],[6.63,10.7,27.5,23.3,56.9,11.2],[3,3,1,1,1,1],[18,18,20,20,20,20],[49.9,7.22,25,0.225,1.72,22],[6.3e-09,0.002,6.87e-05,0.64,0.204,0.000142],["*","*","*","","","*"],[0.893,0.546,0.556,0.011,0.079,0.523]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>PC<\/th>\n      <th>Effect<\/th>\n      <th>SSn<\/th>\n      <th>SSd<\/th>\n      <th>DFn<\/th>\n      <th>DFd<\/th>\n      <th>F<\/th>\n      <th>p<\/th>\n      <th>p&lt;.05<\/th>\n      <th>ges<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","columnDefs":[{"className":"dt-right","targets":[2,3,4,5,6,7,9]}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 ```
 <br>
 
@@ -312,15 +284,10 @@ The by-axis test results indicated that site scores differed significantly among
 ### A. Highly correlated predictors
 The purpose of an NMDS analysis is to ordinate the sites in rank order of their taxonomic composition. Secondarily, environmental information can be added to NMDS biplots to further elucidate relationships among sites with respect to, in this case, their BMI communities. This is achieved through regressions between environmental variables and ordination axes and vice versa. However, highly collinear environmental variables (identified via pairwise correlations) can cause unstable regression coefficients when developing these models (Shipley, 2021). In these cases, PCA is performed on the subset of (i.e., two or more) variables that are strongly correlated. 
 
-```{r nmds corr}
-BMIenvWideDF_trans %>%
-  select(sat,elevation_trans:nitrate_trans) %>%
-  cor() %>%
-  as.data.frame() %>%
-  mutate(across(everything(),~signif(.x,3))) %>%
-  DT::datatable(options=list(dom="t"),
-                caption=htmltools::tags$caption("Table 8. Pearson correlations of all numeric environmental variables",
-                                                style="color:black; font-style: italic"))
+
+```{=html}
+<div id="htmlwidget-a5589a1c328a3b7d9e39" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-a5589a1c328a3b7d9e39">{"x":{"filter":"none","vertical":false,"caption":"<caption style=\"color:black; font-style: italic\">Table 8. Pearson correlations of all numeric environmental variables<\/caption>","data":[["sat","elevation_trans","temp_trans","DO_trans","ph_trans","nitrate_trans"],[1,0.505,-0.599,-0.959,0.141,0.109],[0.505,1,-0.714,-0.491,0.358,-0.0892],[-0.599,-0.714,1,0.553,0.119,0.532],[-0.959,-0.491,0.553,1,-0.0719,-0.143],[0.141,0.358,0.119,-0.0719,1,0.194],[0.109,-0.0892,0.532,-0.143,0.194,1]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>sat<\/th>\n      <th>elevation_trans<\/th>\n      <th>temp_trans<\/th>\n      <th>DO_trans<\/th>\n      <th>ph_trans<\/th>\n      <th>nitrate_trans<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 ```
 <br>
 
@@ -336,9 +303,10 @@ The first step of an NMDS analysis is to choose the type of distance metric. The
 ### C. Number of dimensions
 The second step of an NMDS analysis is to choose the number of dimensions. A series of NMDS models are fit onto the site scores of the first two principal coordinates analysis (PCoA) axes while successively increasing the number of dimensions. Stress levels are observed as the number of dimensions (axes) increase using a scree plot.
 
-```{r nmds stress plot,fig.cap="*Figure 13. The scree plot for a non-metric multidimensional scaling (NMDS) analysis of the alpine lake BMI data has the number of dimensions on the x-axis and the corresponding stress levels on the y-axis.*"}
-plot(bmi_nmds_stress,type="b") 
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/nmds stress plot-1.png" alt="*Figure 13. The scree plot for a non-metric multidimensional scaling (NMDS) analysis of the alpine lake BMI data has the number of dimensions on the x-axis and the corresponding stress levels on the y-axis.*"  />
+<p class="caption">*Figure 13. The scree plot for a non-metric multidimensional scaling (NMDS) analysis of the alpine lake BMI data has the number of dimensions on the x-axis and the corresponding stress levels on the y-axis.*</p>
+</div>
 <br>
 
 This plot (Fig. 13) shows that there was a large decrease in stress from one to two dimensions before more gradual decline in stress levels. The stress level at two dimensions was 0.0807. This pattern suggests using two dimensions for the NMDS analysis.
@@ -348,13 +316,25 @@ This plot (Fig. 13) shows that there was a large decrease in stress from one to 
 ### D. Sensitivity of solution
 The sensitivity of solutions for each site value was determined using a jackknife approach (i.e., assess differences in final configuration if each site was left out).
 
-```{r nmds sensitivity}
-bmi_jack
+
+```
+## 
+## Call: jackmds.smacofB(object = bmi_nmds_default)
+## 
+## SMACOF Jackknife
+## Number of objects: 22 
+## Value loss function: 1.2808 
+## Number of iterations: 17 
+## 
+## Stability measure: 0.9966 
+## Cross validity: 0.9999 
+## Dispersion: 0.0035
 ```
 
-```{r nmds sensitivity plot,fig.cap="*Figure 14. A jacknife plot of BMI data is presented along the first two NMDS axes.*"}
-plot(bmi_jack,main=NA,col.p="black",col.l="red")
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/nmds sensitivity plot-1.png" alt="*Figure 14. A jacknife plot of BMI data is presented along the first two NMDS axes.*"  />
+<p class="caption">*Figure 14. A jacknife plot of BMI data is presented along the first two NMDS axes.*</p>
+</div>
 <br>
 
 The stability of measure and cross validity values were very close to 1, indicating that they do not differ within rounding error between jackknifed runs. Only two sites (i.e., 1, 14) show significant change when jackknifing (Fig. 14). These results indicate that the NMDS solution obtained when using the site scores on the first two PCoA axes as starting values is close to or at the best NMDS solution, which is highly stable (Shipley, 2021). 
@@ -364,10 +344,10 @@ The stability of measure and cross validity values were very close to 1, indicat
 ### E. Shepard diagram
 A Shepard diagram was constructed to see how Bray-Curtis dissimilarities have been converted into Euclidean distances in the two-dimensional NMDS ordination.
 
-```{r nmds shepard,fig.cap="*Figure 15. A Shepard plot of Bray-Curtis dissimilarities (x-axis) and Euclidean distances (y-axis) of alpine lake BMI data is shown above.*"}
-plot(bmi_nmds_default,plot.type="Shepard",xlab="Bray-Curtis dissimilarities",
-     ylab="Euclidean distances (NMDS)",pch=16,main=NA)
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/nmds shepard-1.png" alt="*Figure 15. A Shepard plot of Bray-Curtis dissimilarities (x-axis) and Euclidean distances (y-axis) of alpine lake BMI data is shown above.*"  />
+<p class="caption">*Figure 15. A Shepard plot of Bray-Curtis dissimilarities (x-axis) and Euclidean distances (y-axis) of alpine lake BMI data is shown above.*</p>
+</div>
 <br>
 
 The Shepard diagram shows that there was roughly a linear relationship from the origin until ~0.7 Bray-Curtis dissimilarities before transitioning to an approximately exponential relationship (Fig. 15). This pattern indicated that pairs of sites with similar familial composition of BMI (i.e., small Bray-Curtis dissimilarities) were placed closer together in the NMDS solution, while pairs of sites with more dissimilar familial composition were placed further apart.
@@ -378,9 +358,10 @@ The Shepard diagram shows that there was roughly a linear relationship from the 
 #### 1. Plot categorical environmental variables
 Biplots of sites were plotted on NMDS axes 1 and 2, and points were colored by groups within the five categorical variables: *local_site*, *location*, *fish_presence*, *lotic*, and *shore*.
 
-```{r nmds biplots cat,fig.height=8,fig.width=9,fig.cap="*Figure 16. These five NMDS biplots contain the alpine lake sites plotted on the first two NMDS axes. Site locations are colored by different categorical environmental variables per the five panels: A)* local_site, *B)* location, *C)* fish_presence, *D)* lotic, *and E)* shore."}
-bmi_nmds_cat
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/nmds biplots cat-1.png" alt="*Figure 16. These five NMDS biplots contain the alpine lake sites plotted on the first two NMDS axes. Site locations are colored by different categorical environmental variables per the five panels: A)* local_site, *B)* location, *C)* fish_presence, *D)* lotic, *and E)* shore."  />
+<p class="caption">*Figure 16. These five NMDS biplots contain the alpine lake sites plotted on the first two NMDS axes. Site locations are colored by different categorical environmental variables per the five panels: A)* local_site, *B)* location, *C)* fish_presence, *D)* lotic, *and E)* shore.</p>
+</div>
 <br>
 
 Out of the five categorical variables, only the two binary variables--*fish_presence* and *lotic*--showed discrimination of sites along NMDS axes 1 and 2. Thus, numerical environmental variables were drawn onto their biplots to improve analysis and interpretation. 
@@ -393,22 +374,19 @@ Numerical variables can be related to ordination axes in two ways: 1) predict en
 ##### a. fish_presence
 The NMDS plot was constructed with sites color coded by *fish_presence* category and environmental variables overlain either as dependent variables or predictors.
 
-```{r nmds biplots fp cat num,fig.cap="*Figure 17. NMDS biplots of the alpine lake sites with points colored by* fish_presence *status are drawn. Environmental variables individually regressed on the first two NMDS axes are presented in (A), while each NMDS axis regressed on environmental variables are presented in (B).*"}
-plot_grid(fp_env_p,fp_ord_p,labels=c("A","B"))
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/nmds biplots fp cat num-1.png" alt="*Figure 17. NMDS biplots of the alpine lake sites with points colored by* fish_presence *status are drawn. Environmental variables individually regressed on the first two NMDS axes are presented in (A), while each NMDS axis regressed on environmental variables are presented in (B).*"  />
+<p class="caption">*Figure 17. NMDS biplots of the alpine lake sites with points colored by* fish_presence *status are drawn. Environmental variables individually regressed on the first two NMDS axes are presented in (A), while each NMDS axis regressed on environmental variables are presented in (B).*</p>
+</div>
 <br>
 
 Fig. 17A shows that as NMDS1 values increase, so does *ph_trans* and to a lesser extent, *oxygen* and *nitrate_trans*, while *elevTemp* decreases. As NMDS2 values increase, so does *ph_trans* and to a smaller degree, *elevTemp* and *oxygen*, while *nitrate_trans* decreases. Site scores where fish were present (in upper left) were positively associated with *elevTemp* and negatively associated with *nitrate_trans*. 
 
 
-```{r nmds biplots cat num envfit}
-ef_table %>%
-  mutate(across(c(D1,D2,r2),~signif(.x,3))) %>%
-  DT::datatable(rownames=FALSE,
-                options=list(dom="t"),
-                caption=htmltools::tags$caption("Table 9. Significance test results of multiple regression models where 
-                                                each environmental variable is regressed on both NMDS axes",
-                                                style="color:black; font-style: italic"))
+
+```{=html}
+<div id="htmlwidget-896830ff5cb6f5da093f" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-896830ff5cb6f5da093f">{"x":{"filter":"none","vertical":false,"caption":"<caption style=\"color:black; font-style: italic\">Table 9. Significance test results of multiple regression models where \n                                                each environmental variable is regressed on both NMDS axes<\/caption>","data":[["ph_trans","nitrate_trans","oxygen","elevTemp"],[0.739,0.415,0.975,-0.988],[0.674,-0.91,0.221,0.154],[0.357,0.0301,0.00799,0.117],[0.012,0.758,0.942,0.31]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>variable<\/th>\n      <th>D1<\/th>\n      <th>D2<\/th>\n      <th>r2<\/th>\n      <th>Pr(&gt;r)<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","columnDefs":[{"className":"dt-right","targets":[1,2,3,4]}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 ```
 <br>
 
@@ -418,13 +396,10 @@ Fig. 17B shows that as NMDS1 values increase, so does *oxygen*, and to a lesser 
 
 Statistical analyses were run on the regressions of NMDS axes 1 and 2 on environmental variables. 
 
-```{r nmds biplots cat num ord}
-ord_env_table %>%
-  DT::datatable(rownames=FALSE,
-                options=list(dom="t"),
-                caption=htmltools::tags$caption("Table 10. Significance test results of multiple regression models where each 
-                                                NMDS axis is regressed on all numeric environmental variables",
-                                                style="color:black; font-style: italic"))
+
+```{=html}
+<div id="htmlwidget-9ecb70aae6888cdb923f" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-9ecb70aae6888cdb923f">{"x":{"filter":"none","vertical":false,"caption":"<caption style=\"color:black; font-style: italic\">Table 10. Significance test results of multiple regression models where each \n                                                NMDS axis is regressed on all numeric environmental variables<\/caption>","data":[["NMDS 1","NMDS 1","NMDS 1","NMDS 1","NMDS 1","NMDS 2","NMDS 2","NMDS 2","NMDS 2","NMDS 2"],["(Intercept)","ph_trans","nitrate_trans","oxygen","elevTemp","(Intercept)","ph_trans","nitrate_trans","oxygen","elevTemp"],[7.26e-17,0.214,0.204,0.357,-0.441,-1.23e-16,0.181,-0.16,-0.083,0.149],[0.0898,0.0961,0.112,0.126,0.135,0.0899,0.0962,0.112,0.126,0.135],[8.09e-16,2.23,1.83,2.84,-3.27,-1.36e-15,1.88,-1.43,-0.66,1.1],[1,0.0396,0.085,0.0113,0.00453,1,0.0771,0.171,0.518,0.286]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>axis<\/th>\n      <th>variable<\/th>\n      <th>Estimate<\/th>\n      <th>Std. Error<\/th>\n      <th>t value<\/th>\n      <th>Pr(&gt;|t|)<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"t","columnDefs":[{"className":"dt-right","targets":[2,3,4,5]}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 ```
 <br>
 
@@ -434,9 +409,10 @@ These results indicated that for NMDS1, *ph_trans*, *oxygen*, and *elevTemp* wer
 ##### b. lotic
 A second set of biplots with numerical environmental variables was constructed for site scores colored by lotic category.
 
-```{r nmds biplots lotic cat num,fig.cap="*Figure 18. NMDS biplots of the alpine lake sites with points colored by* fish_presence *status are drawn. Environmental variables individually regressed on the first two NMDS axes are presented in (A), while each NMDS axis regressed on environmental variables are presented in (B).*"}
-plot_grid(l_env_p,l_ord_p,labels=c("A","B"))
-```
+<div class="figure" style="text-align: center">
+<img src="alpine-bmi-analysis-report_files/figure-html/nmds biplots lotic cat num-1.png" alt="*Figure 18. NMDS biplots of the alpine lake sites with points colored by* fish_presence *status are drawn. Environmental variables individually regressed on the first two NMDS axes are presented in (A), while each NMDS axis regressed on environmental variables are presented in (B).*"  />
+<p class="caption">*Figure 18. NMDS biplots of the alpine lake sites with points colored by* fish_presence *status are drawn. Environmental variables individually regressed on the first two NMDS axes are presented in (A), while each NMDS axis regressed on environmental variables are presented in (B).*</p>
+</div>
 <br>
 
 Interpretation of arrows and their statistical significance is the same for these plots as they were for Fig. 17. However, Fig. 18 shows that a cluster of lentic sites (i.e., where lotic = 0) were positively associated with *elevTemp* and negatively associated with *nitrate_trans* and that a cluster of *lotic* sites were positively associated with *elevTemp* and negatively associated with *ph_trans*.
