@@ -33,10 +33,10 @@ In this project, a subset of data from a study on alpine lakes benthic macroinve
   
 
 ## R Product
-+ [Report: html format](https://htmlpreview.github.io/?https://github.com/kpost34/alpine_bmi_analysis/blob/master/report/alpine-bmi-analysis-report.html)
 + [Report: markdown format](https://github.com/kpost34/alpine_bmi_analysis/blob/master/report/alpine-bmi-analysis-report.md)
 
 #### **Project Creator: Keith Post**
 + [Github Profile](https://github.com/kpost34) 
 + [LinkedIN Profile](https://www.linkedin.com/in/keith-post/)
-+ [Email](mailto:keithhpost@gmail.com)
++ [Email](mailto:keithpost.kp@gmail.com)
+
